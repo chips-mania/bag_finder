@@ -22,7 +22,7 @@ AI-powered web service that detects and segments bags from uploaded images using
 ---
 
 ## ⚙️ 시스템 흐름
-
+```
 [사용자 업로드] 
    ↓
 POST /session  
@@ -40,7 +40,7 @@ POST /finalize
    ↓
 GET /items/{id}/colors
    └─ 색상 리스트 반환 → 색상칩 애니메이션 표시
-
+```
 ---
 
 ## 🧩 기술 스택
