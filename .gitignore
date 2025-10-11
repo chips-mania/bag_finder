@@ -1,0 +1,132 @@
+# =====================================================
+# 📁 Common
+# =====================================================
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*$py.class
+*.log
+*.sqlite3
+*.db
+.DS_Store
+Thumbs.db
+.env
+.env.*
+.vscode/
+.idea/
+*.bak
+*.swp
+*.tmp
+
+# =====================================================
+# 🐍 Python / FastAPI backend
+# =====================================================
+# Virtual environments
+venv/
+env/
+.venv/
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Byte-compiled / cache
+*.pyc
+__pycache__/
+
+# Unit test / coverage
+.coverage
+htmlcov/
+.tox/
+.nox/
+pytest_cache/
+
+# mypy / pyright
+.mypy_cache/
+.pyre/
+.pytype/
+
+# FastAPI / Uvicorn logs
+*.pid
+*.log
+
+# =====================================================
+# ⚛️ React / Vite frontend
+# =====================================================
+node_modules/
+dist/
+build/
+.cache/
+*.lock
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# dotenv files
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Vite cache
+.vite/
+
+# =====================================================
+# 🐳 Docker
+# =====================================================
+# Docker files and build caches
+Dockerfile~
+docker-compose*.yaml~
+*.tar
+*.bak
+
+# Ignore mounted volumes and generated artifacts
+/data/
+volumes/
+logs/
+tmp/
+
+# =====================================================
+# 🧠 Supabase (optional local config)
+# =====================================================
+.supabase/
+supabase/.temp/
+supabase/.branches/
+supabase/.functions/
+
+# =====================================================
+# 🧰 OS / Editor
+# =====================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# VSCode / IntelliJ / PyCharm
+.vscode/
+.idea/
+
+# =====================================================
+# ✅ Custom (user data, test files, etc.)
+# =====================================================
+uploads/
+test_data/
+*.csv
+*.json
+*.parquet
+*.pkl
+
+# model weights or large files
+*.pt
+*.onnx
+*.h5
+*.ckpt

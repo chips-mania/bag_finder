@@ -1,0 +1,163 @@
+.image-preview-container {
+  width: 100%;
+  max-width: 800px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.preview-header {
+  padding: 20px;
+  background: white;
+  color: #333;
+  border-bottom: 2px solid #e9ecef;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.preview-header h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+}
+
+.session-info {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.session-id {
+  background: #f8f9fa;
+  border: 1px solid #e9ecef;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: monospace;
+  word-break: break-all;
+  color: #666;
+}
+
+.image-container {
+  position: relative;
+  padding: 0;
+  text-align: center;
+  background: white;
+  margin: 0;
+  border-radius: 8px;
+}
+
+.preview-image {
+  max-width: 100%;
+  max-height: 500px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  object-fit: contain;
+  display: block;
+}
+
+.contour-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.image-details {
+  padding: 20px;
+  background: white;
+  border-top: 2px solid #e9ecef;
+  display: flex;
+  justify-content: center;
+  gap: 30px;
+  flex-wrap: wrap;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.detail-item .label {
+  font-size: 0.9rem;
+  color: #666;
+  font-weight: 500;
+}
+
+.detail-item .value {
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 600;
+  font-family: monospace;
+}
+
+.next-step {
+  padding: 20px;
+  background: white;
+  border-top: 2px solid #e9ecef;
+  text-align: center;
+}
+
+.next-step p {
+  margin: 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  .preview-header {
+    padding: 15px;
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .preview-header h3 {
+    font-size: 1.25rem;
+  }
+  
+  .session-id {
+    font-size: 0.8rem;
+    padding: 3px 6px;
+  }
+  
+  .image-container {
+    padding: 0;
+  }
+  
+  .preview-image {
+    max-height: 300px;
+  }
+  
+  .image-details {
+    padding: 15px;
+    gap: 20px;
+  }
+  
+  .detail-item .label {
+    font-size: 0.85rem;
+  }
+  
+  .detail-item .value {
+    font-size: 1rem;
+  }
+  
+  .next-step {
+    padding: 15px;
+  }
+  
+  .next-step p {
+    font-size: 0.9rem;
+  }
+}

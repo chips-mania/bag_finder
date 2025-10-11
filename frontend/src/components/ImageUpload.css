@@ -1,0 +1,120 @@
+.image-upload-container {
+  width: 100%;
+  height: 100%;
+  margin: 0 auto;
+}
+
+.dropzone {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background-color: white;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dropzone:hover {
+  background-color: #f8f9fa;
+}
+
+.dropzone.active {
+  background-color: #f0f8ff;
+  transform: scale(1.02);
+}
+
+.dropzone.loading {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.upload-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.upload-icon {
+  font-size: 48px;
+  margin-bottom: 8px;
+}
+
+.upload-content h3 {
+  margin: 0;
+  color: #999;
+  font-size: 1.5rem;
+  font-weight: 700;
+}
+
+.upload-content p {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+.file-info {
+  margin-top: 8px;
+  font-size: 0.9rem;
+  color: #888;
+}
+
+.file-info p {
+  margin: 4px 0;
+}
+
+.loading-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid #007bff;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.loading-content p {
+  margin: 0;
+  color: #666;
+  font-size: 1rem;
+}
+
+/* 모바일 대응 */
+@media (max-width: 768px) {
+  .dropzone {
+    padding: 30px 15px;
+    min-height: 150px;
+  }
+  
+  .upload-icon {
+    font-size: 36px;
+  }
+  
+  .upload-content h3 {
+    font-size: 1.25rem;
+  }
+  
+  .upload-content p {
+    font-size: 0.9rem;
+  }
+  
+  .file-info {
+    font-size: 0.8rem;
+  }
+}
