@@ -1,6 +1,5 @@
 # 👜 Contributing Guidelines for Bag Segmentation & Search Project
-
-감사합니다!  
+ 
 이 프로젝트는 **가방 이미지를 AI로 세그멘테이션하고, Supabase 벡터 검색으로 유사한 가방을 찾는 웹서비스**입니다.  
 아래의 가이드라인을 따라주시면 코드 품질과 협업 효율을 함께 유지할 수 있습니다.
 

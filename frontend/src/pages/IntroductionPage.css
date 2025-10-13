@@ -1,0 +1,74 @@
+.introduction-page {
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.gallery-container {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  margin-top: -12rem;
+  margin-bottom: 2rem;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+}
+
+.celeb-gallery {
+  display: flex;
+  gap: 0.0rem;  /* 이미지 간격*/
+  padding: 1rem 0;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  width: 100%;
+  justify-content: flex-start;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}
+
+.celeb-gallery::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.click-area {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  width: 50%;
+  z-index: 10;
+  cursor: pointer;
+}
+
+.click-area.left {
+  left: 0;
+}
+
+.click-area.right {
+  right: 0;
+}
+
+.celeb-image {
+  height: 400px;
+  width: auto;
+  object-fit: cover;
+  flex-shrink: 0;
+  transition: transform 0.3s ease;
+}
+
+
+@media (max-width: 768px) {
+  .introduction-page {
+    padding: 1rem;
+  }
+  
+  .celeb-gallery {
+    gap: 0.5rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  
+  .celeb-image {
+    height: 200px;
+  }
+}

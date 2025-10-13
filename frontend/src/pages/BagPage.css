@@ -1,0 +1,169 @@
+.bag-page {
+  padding: 0;
+  max-width: 1200px;
+  margin: 0 auto;
+  font-family: 'Inter', sans-serif;
+}
+
+.bag-header {
+  margin-top: -2rem;
+  text-align: center;
+  /* padding-bottom: 1rem; */
+  margin-bottom: 1rem;
+}
+
+.bag-header h1 {
+  font-size: 2rem;
+  color: #333;
+  margin: 0;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.0em;
+}
+
+.bag-main {
+  min-height: 60vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.bag-content {
+  display: flex;
+  gap: 2rem;
+  width: 100%;
+  max-width: 1200px;
+  align-items: flex-start;
+}
+
+.upload-section {
+  width: 500px;
+  height: 500px;
+  max-width: none;
+}
+
+.results-section {
+  flex: 1;
+  background: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 2rem;
+  min-height: 400px;
+}
+
+.results-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 1rem;
+}
+
+.bag-main.upload-mode {
+  justify-content: center;
+}
+
+.bag-main.preview-mode {
+  justify-content: flex-start;
+}
+
+.action-buttons {
+  margin-top: 2rem;
+  display: flex;
+  gap: 0;
+  background: transparent;
+  justify-content: center;
+  width: 100%;
+}
+
+.search-button {
+  background: #000000;
+  color: white;
+  border: 1px solid #000000;
+  padding: 12px 40px;
+  border-radius: 0;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.search-button:hover {
+  background: white;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+.reset-button {
+  background: #000000;
+  color: white;
+  border: 1px solid #000000;
+  padding: 12px 24px;
+  border-radius: 0;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.reset-button:hover {
+  background: white;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+.prompt-buttons {
+  margin-top: 1rem;
+  display: flex;
+  gap: 0;
+  background: transparent;
+  justify-content: center;
+}
+
+.prompt-button {
+  background: #000000;
+  color: white;
+  border: 1px solid #000000;
+  padding: 12px 40px;
+  border-radius: 0;
+  font-size: 1rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.prompt-button:hover {
+  background: white;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+.prompt-button.active {
+  background: white;
+  color: #000000;
+  border: 1px solid #000000;
+}
+
+.add-button.active {
+  background: #28a745;
+  color: white;
+  border: 1px solid #28a745;
+}
+
+.remove-button.active {
+  background: #dc3545;
+  color: white;
+  border: 1px solid #dc3545;
+}
+
+
+@media (max-width: 768px) {
+  .bag-page {
+    padding: 1rem;
+  }
+  
+  .page-header h1 {
+    font-size: 2rem;
+  }
+}

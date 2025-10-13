@@ -1,13 +1,92 @@
 .app {
-  min-height: 100vh;
   height: 100vh;
   width: 100vw;
-  background: linear-gradient(135deg, #FFFFFF 0%, #FDF7FE 40%, #D1E8F2 100%);
-  padding: 20px;
+  background: white;
   display: flex;
   flex-direction: column;
+  overflow: hidden;
+}
+
+.navigation {
+  background: #000000;
+  padding: 1rem 2rem;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  font-family: 'Inter', sans-serif;
+}
+
+.nav-left {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.nav-brand-small {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: white;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin: 0;
+}
+
+.nav-main {
+  display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 2rem;
+}
+
+.nav-main-item {
+  background: none;
+  border: none;
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: white;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  position: relative;
+  padding: 0.1rem 0;
+  font-family: 'Inter', sans-serif;
+  outline: none;
+}
+
+.nav-main-item:focus {
+  outline: none;
+}
+
+.nav-main-item:active {
+  outline: none;
+}
+
+.nav-main-item:hover {
+  opacity: 1.0;
+  position: relative;
+}
+
+.nav-main-item:hover::after {
+  content: '';
+  position: absolute;
+  bottom: -0.2rem;
+  left: 0;
+  width: 100%;
+  height: 0.2rem;
+  background-color: white;
+}
+
+.nav-main-item.active {
+  position: relative;
+}
+
+.nav-main-item.active::after {
+  content: '';
+  position: absolute;
+  bottom: -0.2rem;
+  left: 0;
+  width: 100%;
+  height: 0.2rem;
+  background-color: white;
 }
 
 .app-header {
@@ -31,33 +110,15 @@
 }
 
 .app-main {
-  background: white;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  flex: 1;
+  padding: 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  min-height: 500px;
-  width: 800px;
+  justify-content: center;
+  overflow-y: auto;
 }
 
-.app-main.upload-mode {
-  min-height: 500px;
-  width: 400px;
-}
-
-.app-main.preview-mode {
-  min-height: auto;
-  width: auto;
-}
-
-.action-buttons {
-  padding: 20px;
-  text-align: center;
-  background: #f8f9fa;
-  width: 100%;
-}
 
 .reset-button {
   background: white;
@@ -68,44 +129,44 @@
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: all 0.3s ease;
-}
-
-.reset-button:hover {
-  background: #f0f0f0;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-}
-
-.reset-button:active {
-  transform: translateY(0);
 }
 
 /* 모바일 대응 */
 @media (max-width: 768px) {
-  .app {
-    padding: 10px;
+  .navigation {
+    padding: 1rem;
   }
   
-  .app-header h1 {
-    font-size: 2rem;
+  .nav-main {
+    gap: 1rem;
+    flex-wrap: wrap;
   }
   
-  .app-header p {
-    font-size: 1rem;
+  .nav-main-item {
+    font-size: 1.2rem;
   }
   
   .app-main {
-    border-radius: 12px;
-    min-height: 400px;
+    padding: 1rem;
   }
   
-  .action-buttons {
-    padding: 15px;
-  }
   
   .reset-button {
     padding: 10px 20px;
     font-size: 0.9rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .nav-main {
+    gap: 0.5rem;
+  }
+  
+  .nav-main-item {
+    font-size: 1rem;
+  }
+  
+  .nav-brand-small {
+    font-size: 0.7rem;
   }
 }
