@@ -1,7 +1,7 @@
 .bag-page {
   padding: 0;
-  max-width: 1200px;
-  margin: 0 auto;
+  width: 80%; /* 추천란 가로 사이즈 */
+  margin: 0;
   font-family: 'Inter', sans-serif;
 }
 
@@ -33,13 +33,13 @@
   display: flex;
   gap: 2rem;
   width: 100%;
-  max-width: 1200px;
-  align-items: flex-start;
+  align-items: stretch; /* 두 컬럼 동일 높이로 스트레치 */
+  flex-wrap: wrap; /* 아래 행(summary)으로 내려갈 수 있게 */
 }
 
 .upload-section {
   width: 500px;
-  height: 500px;
+  height: auto; /* 콘텐츠 높이에 맞춤 */
   max-width: none;
 }
 
@@ -48,7 +48,17 @@
   background: white;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   padding: 2rem;
-  min-height: 400px;
+  min-height: 0; /* 좌측과 동일 높이로 스트레치 */
+  height: auto;
+}
+
+/* 업로드+추천 두 컬럼의 전체 가로를 차지하는 요약 박스 */
+.summary-section {
+  flex-basis: 100%;
+  background: white;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  padding: 1.5rem 2rem;
+  margin-top: 1rem; /* 두 컬럼 아래 약간의 여백 */
 }
 
 .results-grid {
@@ -66,7 +76,7 @@
 }
 
 .action-buttons {
-  margin-top: 2rem;
+  margin-top: 0;
   display: flex;
   gap: 0;
   background: transparent;
@@ -84,7 +94,11 @@
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  flex: 1 1 0;
+  outline: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .search-button:hover {
@@ -92,18 +106,27 @@
   color: #000000;
   border: 1px solid #000000;
 }
+.search-button:focus,
+.search-button:focus-visible {
+  outline: none;
+  border-color: #000000 !important;
+}
 
 .reset-button {
   background: #000000;
   color: white;
   border: 1px solid #000000;
-  padding: 12px 24px;
+  padding: 12px 40px;
   border-radius: 0;
   font-size: 1rem;
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  flex: 1 1 0;
+  outline: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 .reset-button:hover {
@@ -111,9 +134,14 @@
   color: #000000;
   border: 1px solid #000000;
 }
+.reset-button:focus,
+.reset-button:focus-visible {
+  outline: none;
+  border-color: #000000 !important;
+}
 
 .prompt-buttons {
-  margin-top: 1rem;
+  margin-top: 0; /* 두 줄 버튼 사이 간격 제거 */
   display: flex;
   gap: 0;
   background: transparent;
@@ -130,13 +158,29 @@
   font-family: 'Inter', sans-serif;
   font-weight: 500;
   cursor: pointer;
-  transition: all 0.3s ease;
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
+  flex: 1 1 0;
+  outline: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+/* Disable any press-scale effect */
+.search-button:active,
+.reset-button:active,
+.prompt-button:active {
+  transform: none;
 }
 
 .prompt-button:hover {
   background: white;
   color: #000000;
   border: 1px solid #000000;
+}
+.prompt-button:focus,
+.prompt-button:focus-visible {
+  outline: none;
+  border-color: #000000 !important;
 }
 
 .prompt-button.active {

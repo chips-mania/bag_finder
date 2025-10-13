@@ -22,7 +22,8 @@ const BagPage: React.FC<BagPageProps> = ({
   onReset
 }) => {
   const [showResults, setShowResults] = useState(false);
-  const [promptMode, setPromptMode] = useState<'add' | 'remove' | null>(null);
+  const [promptMode, setPromptMode] = useState<'add' | 'remove' | null>('add');
+  const [resetSignal, setResetSignal] = useState(0);
   return (
     <div className="bag-page">
       <div className="bag-header">
@@ -43,6 +44,8 @@ const BagPage: React.FC<BagPageProps> = ({
                 session={session}
                 imageUrl={imageUrl}
                 onError={onError}
+                promptMode={promptMode}
+                resetSignal={resetSignal}
               />
             )}
 
@@ -71,21 +74,24 @@ const BagPage: React.FC<BagPageProps> = ({
               <div className="prompt-buttons">
                 <button 
                   className={`prompt-button add-button ${promptMode === 'add' ? 'active' : ''}`}
-                  onClick={() => setPromptMode(promptMode === 'add' ? null : 'add')}
+                  onClick={() => setPromptMode('add')}
                 >
-                  영역더하기
+                  ADD
                 </button>
                 <button 
                   className={`prompt-button remove-button ${promptMode === 'remove' ? 'active' : ''}`}
-                  onClick={() => setPromptMode(promptMode === 'remove' ? null : 'remove')}
+                  onClick={() => setPromptMode('remove')}
                 >
-                  영역빼기
+                  REMOVE
                 </button>
                 <button 
                   className="prompt-button reset-prompt-button"
-                  onClick={() => setPromptMode(null)}
+                  onClick={() => {
+                    setResetSignal((v) => v + 1);
+                    setPromptMode('add');
+                  }}
                 >
-                  초기화
+                  RESET
                 </button>
               </div>
             )}
@@ -96,6 +102,12 @@ const BagPage: React.FC<BagPageProps> = ({
               <div className="results-grid">
                 {/* 분석 결과가 여기에 표시됩니다 */}
               </div>
+            </div>
+          )}
+
+          {showResults && (
+            <div className="summary-section">
+              {/* 추가 정보/요약 상자 (업로드+추천 박스 전체 가로폭과 동일) */}
             </div>
           )}
         </div>

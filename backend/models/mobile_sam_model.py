@@ -61,11 +61,38 @@ class MobileSAMModel:
         img_np = self._pil_to_numpy_rgb(image)
 
         try:
+            # Normalize prompt shapes: ensure shape is (1, N, 2) and (1, N)
+            pts_in = points
+            lbs_in = labels
+            try:
+                if isinstance(pts_in, list) and len(pts_in) > 0:
+                    # If first element is a number -> Nx2, wrap to [Nx2]
+                    first = pts_in[0]
+                    if isinstance(first, (list, tuple)) and len(first) == 2 and all(
+                        isinstance(v, (int, float)) for v in first
+                    ):
+                        # Now check if it's 2D (Nx2) not 3D
+                        if not (isinstance(pts_in[0][0], (list, tuple)) and len(pts_in[0][0]) == 2):
+                            pts_in = [pts_in]
+                            lbs_in = [labels] if isinstance(labels, list) and (len(labels) > 0 and not isinstance(labels[0], list)) else labels
+            except Exception:
+                # Fail safe: keep original
+                pass
+
+            if isinstance(lbs_in, list) and len(lbs_in) > 0 and not isinstance(lbs_in[0], (list, tuple)):
+                # Ensure labels nested when points are nested
+                if isinstance(pts_in, list) and len(pts_in) > 0 and isinstance(pts_in[0], list) and len(pts_in[0]) > 0 and isinstance(pts_in[0][0], (list, tuple)):
+                    lbs_in = [lbs_in]
+
+            logger.info("SAM.predict inputs -> points groups: %s, points per group: %s, labels groups: %s",
+                        len(pts_in) if isinstance(pts_in, list) else 'n/a',
+                        len(pts_in[0]) if isinstance(pts_in, list) and len(pts_in) > 0 else 'n/a',
+                        len(lbs_in) if isinstance(lbs_in, list) else 'n/a')
             # Ultralytics SAM 추론
             results = self.model.predict(
                 source=img_np,
-                points=points,
-                labels=labels,
+                points=pts_in,
+                labels=lbs_in,
                 device=self.device,
                 save=False,
                 show=False,

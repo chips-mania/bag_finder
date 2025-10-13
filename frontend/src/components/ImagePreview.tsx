@@ -1,15 +1,17 @@
 import React, { useEffect, useState } from 'react';
 import { apiService } from '../services/api';
-import type { SessionResponse, PredictResponse } from '../services/api';
+import type { SessionResponse } from '../services/api';
 import './ImagePreview.css';
 
 interface ImagePreviewProps {
   session: SessionResponse;
   imageUrl: string | null;
   onError: (error: string) => void;
+  promptMode?: 'add' | 'remove' | null;
+  resetSignal?: number;
 }
 
-const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError }) => {
+const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError, promptMode = 'add', resetSignal = 0 }) => {
   const [points, setPoints] = useState<number[][]>([]);
   const [labels, setLabels] = useState<number[]>([]);
   const [contours, setContours] = useState<number[][][]>([]);
@@ -23,6 +25,16 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError 
     setContours([]);
     setServerSize(null);
   }, [session.session_id, imageUrl]);
+
+  // 외부 초기화 신호 처리
+  useEffect(() => {
+    if (resetSignal > 0) {
+      setPoints([]);
+      setLabels([]);
+      setContours([]);
+      setServerSize(null);
+    }
+  }, [resetSignal]);
 
   const handleImageClick = async (event: React.MouseEvent<HTMLImageElement>) => {
     if (isPredicting || !imageUrl) return;
@@ -63,17 +75,31 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError 
     const imageX = Math.max(0, Math.min(serverW, relativeX * serverW));
     const imageY = Math.max(0, Math.min(serverH, relativeY * serverH));
 
+    const label = promptMode === 'remove' ? 0 : 1;
+
+    // 디버그 로그: 클릭/좌표 변환 정보
+    console.log('[Click]', {
+      pixel: { x, y },
+      container: { width: rect.width, height: rect.height },
+      display: { width: displayWidth, height: displayHeight, offsetX, offsetY },
+      relative: { x: relativeX, y: relativeY },
+      server: { x: imageX, y: imageY },
+      promptMode,
+      label,
+    });
     const newPoints = [...points, [imageX, imageY]];
-    const newLabels = [...labels, 1]; // 1 = foreground (추후 우클릭/토글로 0도 지원 가능)
+    const newLabels = [...labels, label];
 
     setPoints(newPoints);
     setLabels(newLabels);
 
+    console.log('[Predict] points:', newPoints.length, 'labels:', newLabels);
     setIsPredicting(true);
     try {
       const result = await apiService.predictMask(session.session_id, newPoints, newLabels);
       setContours(result.contours);
       setServerSize({ width: result.width, height: result.height });
+      console.log('[Predict] contours:', result.contours?.length, 'size:', result.width, 'x', result.height);
     } catch (error: any) {
       const detail = error?.response?.data?.detail;
       const message = Array.isArray(detail)
@@ -121,13 +147,14 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError 
                 <polygon
                   key={i}
                   points={pointsAttr}
-                  fill="none"
+                  fill="#FAE100"
+                  fillOpacity={0.25}
                   stroke="#FAE100"
-                  strokeWidth={4}                  // 2~3 추천
-                  strokeOpacity={0.9}
-                  strokeLinejoin="round"           // 모서리 라운드
-                  strokeLinecap="round"            // 선끝 라운드
-                  vectorEffect="non-scaling-stroke"// 리사이즈해도 선굵기 고정
+                  strokeWidth={4}
+                  strokeOpacity={0.95}
+                  strokeLinejoin="round"
+                  strokeLinecap="round"
+                  vectorEffect="non-scaling-stroke"
                   shapeRendering="geometricPrecision"
                 />
               );

@@ -46,12 +46,13 @@ button {
   cursor: pointer;
   transition: border-color 0.25s;
 }
+/* Disable global button hover/focus styles for app-specific buttons */
 button:hover {
-  border-color: #646cff;
+  border-color: inherit;
 }
 button:focus,
 button:focus-visible {
-  outline: 4px auto -webkit-focus-ring-color;
+  outline: none;
 }
 
 @media (prefers-color-scheme: light) {

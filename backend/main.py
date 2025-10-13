@@ -255,6 +255,13 @@ async def predict_mask(body: PredictBody):
         raise HTTPException(status_code=404, detail="Image file not found")
 
     try:
+        # 입력 포인트/라벨 로깅
+        try:
+            pts_len = len(body.points) if isinstance(body.points, list) else 'n/a'
+            lbs_len = len(body.labels) if isinstance(body.labels, list) else 'n/a'
+            logger.info("/predict received: points=%s labels=%s", pts_len, lbs_len)
+        except Exception:
+            pass
         img = Image.open(image_path).convert("RGB")
     except Exception as e:
         logger.exception("Failed to open session image")
