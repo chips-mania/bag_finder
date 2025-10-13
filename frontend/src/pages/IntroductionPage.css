@@ -1,5 +1,4 @@
 .introduction-page {
-  padding: 2rem;
   max-width: 1200px;
   margin: 0 auto;
 }
@@ -9,7 +8,6 @@
   display: flex;
   align-items: center;
   justify-content: flex-start;
-  margin-top: -12rem;
   margin-bottom: 2rem;
   width: 100vw;
   margin-left: calc(-50vw + 50%);
@@ -18,7 +16,6 @@
 .celeb-gallery {
   display: flex;
   gap: 0.0rem;  /* 이미지 간격*/
-  padding: 1rem 0;
   overflow-x: auto;
   scroll-behavior: smooth;
   width: 100%;

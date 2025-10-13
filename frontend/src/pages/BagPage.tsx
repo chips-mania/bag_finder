@@ -27,10 +27,9 @@ const BagPage: React.FC<BagPageProps> = ({
   return (
     <div className="bag-page">
       <div className="bag-header">
-        <h1>BAG FINDER</h1>
       </div>
 
-      <main className={`bag-main ${!session ? 'upload-mode' : 'preview-mode'}`}>
+      <main className={`bag-main ${showResults ? 'preview-mode' : 'upload-mode'}`}>
         <div className="bag-content">
           <div className="upload-section">
             {!session ? (

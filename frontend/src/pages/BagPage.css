@@ -1,12 +1,12 @@
 .bag-page {
-  padding: 0;
+  padding: 10px;
   width: 80%; /* 추천란 가로 사이즈 */
   margin: 0;
   font-family: 'Inter', sans-serif;
 }
 
 .bag-header {
-  margin-top: -2rem;
+  margin-top: 0;
   text-align: center;
   /* padding-bottom: 1rem; */
   margin-bottom: 1rem;
@@ -58,7 +58,7 @@
   background: white;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
   padding: 1.5rem 2rem;
-  margin-top: 1rem; /* 두 컬럼 아래 약간의 여백 */
+  height: 80px;
 }
 
 .results-grid {
@@ -71,8 +71,32 @@
   justify-content: center;
 }
 
+/* 업로드 전: 업로드 박스를 가로 중앙에 배치 */
+.bag-main.upload-mode .bag-content {
+  justify-content: center;
+}
+
+.bag-main.upload-mode .upload-section {
+  width: 100%;
+  max-width: var(--upload-w);
+}
+
 .bag-main.preview-mode {
   justify-content: flex-start;
+}
+
+/* 결과 표시 모드: 좌측 고정 폭, 우측 가변 비율 */
+.bag-main.preview-mode .bag-content {
+  justify-content: flex-start;
+}
+
+.bag-main.preview-mode .upload-section {
+  flex: 0 0 var(--upload-w); /* 고정 폭 컬럼 */
+}
+
+.bag-main.preview-mode .results-section {
+  flex: 1 1 auto; /* 남은 영역 채우기 */
+  min-width: 0;   /* flex overflow 방지 */
 }
 
 .action-buttons {

@@ -1,3 +1,9 @@
+:root {
+  --nav-h: 120px;
+  --upload-w: 450px;        /* 업로드 전 가로 폭 */
+  --dropzone-min-h: 550px;  /* 업로드 전 드롭존 최소 높이 */
+}
+
 .app {
   height: 100vh;
   width: 100vw;
@@ -9,11 +15,14 @@
 
 .navigation {
   background: #000000;
-  padding: 1rem 2rem;
+  height: var(--nav-h);
+  padding: 0 2rem;
   position: sticky;
   top: 0;
   z-index: 100;
   font-family: 'Inter', sans-serif;
+  display: flex;
+  align-items: center;
 }
 
 .nav-left {
@@ -111,11 +120,11 @@
 
 .app-main {
   flex: 1;
-  padding: 2rem;
+  padding-bottom: 30px;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
+  justify-content: flex-start;
   overflow-y: auto;
 }
 

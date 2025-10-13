@@ -2,7 +2,7 @@
   width: 100%;
   height: 100%;
   margin: 0 auto;
-  max-width: 700px;
+  max-width: var(--upload-w);
   background: white;
   border-radius: 0;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
@@ -21,7 +21,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  min-height: 300px;
+  min-height: var(--dropzone-min-h);
   box-sizing: border-box;
 }
 
