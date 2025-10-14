@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { apiService } from '../services/api';
 import type { SessionResponse } from '../services/api';
 import './ImagePreview.css';
@@ -9,14 +9,16 @@ interface ImagePreviewProps {
   onError: (error: string) => void;
   promptMode?: 'add' | 'remove' | null;
   resetSignal?: number;
+  onHeightChange?: (height: number) => void;
 }
 
-const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError, promptMode = 'add', resetSignal = 0 }) => {
+const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError, promptMode = 'add', resetSignal = 0, onHeightChange }) => {
   const [points, setPoints] = useState<number[][]>([]);
   const [labels, setLabels] = useState<number[]>([]);
   const [contours, setContours] = useState<number[][][]>([]);
   const [serverSize, setServerSize] = useState<{width: number, height: number} | null>(null);
   const [isPredicting, setIsPredicting] = useState(false);
+  const imgRef = useRef<HTMLImageElement | null>(null);
 
   // 업로드(세션) 변경 시 상태 초기화
   useEffect(() => {
@@ -35,6 +37,33 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
       setServerSize(null);
     }
   }, [resetSignal]);
+
+  // 프리뷰 이미지 높이(렌더된 px)와 CSS 변수 값 로깅
+  useEffect(() => {
+    const el = imgRef.current;
+    if (!el) return;
+
+    const logHeights = () => {
+      const root = document.documentElement;
+      const cssVar = getComputedStyle(root)
+        .getPropertyValue('--preview-img-h')
+        .trim() || '600px';
+      const rendered = Math.round(el.getBoundingClientRect().height);
+      // eslint-disable-next-line no-console
+      console.log('[Preview Height]', { cssVar, renderedPx: rendered });
+      if (onHeightChange && rendered > 0) {
+        onHeightChange(rendered);
+      }
+    };
+
+    const ro = new ResizeObserver(() => logHeights());
+    ro.observe(el);
+    // 최초 1회
+    logHeights();
+    return () => {
+      try { ro.disconnect(); } catch {}
+    };
+  }, [imageUrl, onHeightChange]);
 
   const handleImageClick = async (event: React.MouseEvent<HTMLImageElement>) => {
     if (isPredicting || !imageUrl) return;
@@ -121,6 +150,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
             alt="Uploaded"
             className="preview-image"
             onClick={handleImageClick}
+            ref={imgRef}
             style={{ cursor: isPredicting ? 'wait' : 'crosshair', display: 'block', width: '100%', height: 'auto' }}
           />
         )}

@@ -9,6 +9,7 @@ from typing import Dict, Any, List
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, ValidationError
 from PIL import Image
 from dotenv import load_dotenv
@@ -125,6 +126,9 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# 정적 파일 서빙: /static → backend/static
+app.mount("/static", StaticFiles(directory=str(Path(__file__).parent / "static")), name="static")
 
 # 요청/응답 로깅
 @app.middleware("http")

@@ -47,18 +47,232 @@
   flex: 1;
   background: white;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  padding: 2rem;
-  min-height: 0; /* 좌측과 동일 높이로 스트레치 */
-  height: auto;
+  padding: 3rem 2rem; /* 위아래 패딩 포함 */
+  min-height: 0;
+  height: 475px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  position: relative; /* 내부 화살표 기준 */
+}
+
+/* results-section 상/하 스크롤 화살표 */
+.results-arrow {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 40px;
+  height: 40px;
+  background: rgba(0, 0, 0, 0);
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.results-arrow.up { top: 0px; }
+.results-arrow.down { bottom: 0px; }
+
+.results-arrow::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+}
+.results-arrow.up::after { border-bottom: 10px solid #000000; }
+.results-arrow.down::after { border-top: 10px solid #000000; }
+
+/* 오른쪽 상세 리스트 (스크롤) */
+.results-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  overflow-y: auto;
+  flex: 1;
+  -ms-overflow-style: none; /* IE/Edge legacy */
+  scrollbar-width: none;    /* Firefox */
+}
+
+.results-list::-webkit-scrollbar {
+  display: none;            /* Chrome/Safari/Opera */
+}
+
+.results-list::-webkit-scrollbar-button {
+  display: none;
+}
+
+
+.bag-card {
+  display: grid;
+  grid-template-columns: 160px 1fr;
+  gap: 1rem;
+  align-items: start;
+  border: 1px solid #d8d8d8;
+}
+
+.bag-card img {
+  width: 150px;
+  height: 150px;
+  object-fit: cover;
+  display: block;
+}
+
+.bag-info {
+  display: flex;
+  flex-direction: column;
+  padding-top: 1rem;
+  gap: 3.1rem;
+}
+
+.bag-info-row {
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.separator {
+  color: #ddd;
+  font-weight: 300;
+}
+
+.bag-name {
+  font-weight: 500;
+  font-size: 1.2rem;
+  color: #333;
+}
+
+.bag-brand {
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.bag-price {
+  font-weight: 600;
+  font-size: 2rem;
+  color: #333;
+}
+
+.bag-type {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.bag-material {
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.color-button {
+  color: #666;
+  background: #fff;
+  padding: 4px 12px;
+  border-radius: 0;
+  font-family: 'Inter', sans-serif;
+  font-size: 0.85rem;
+  cursor: pointer;
+  transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.color-button:hover {
+  background: #fff;
+  color: #000;
 }
 
 /* 업로드+추천 두 컬럼의 전체 가로를 차지하는 요약 박스 */
 .summary-section {
+  position: relative;
   flex-basis: 100%;
   background: white;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-  padding: 1.5rem 2rem;
-  height: 80px;
+  padding: 1.5rem 5rem;
+  height: 140px;
+  overflow: hidden;
+}
+
+/* 하단 가로 갤러리 (20개) */
+.bottom-gallery {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
+
+.gallery-track {
+  display: flex;
+  gap: 0.75rem;
+  width: max-content;
+  overflow-x: auto;
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+}
+
+/* 스크롤 화살표 버튼만 숨기기 */
+
+
+
+.gallery-item {
+  flex-shrink: 0;
+}
+
+
+
+.gallery-item img {
+  width: 140px;
+  height: 140px;
+  object-fit: cover;
+  display: block;
+}
+
+.summary-section .gallery-arrow {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 60px;
+  height: 150px;
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  border-radius: 0%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.gallery-arrow.left {
+  left: 12px;
+}
+
+.gallery-arrow.right {
+  right: 12px;
+}
+
+.gallery-arrow::after {
+  content: '';
+  display: block;
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+}
+
+.gallery-arrow.left::after {
+  border-right: 10px solid #000000;
+}
+
+.gallery-arrow.right::after {
+  border-left: 10px solid #000000;
+}
+
+.gallery-arrow:hover {
+  background: rgba(255, 255, 255, 0.8);
 }
 
 .results-grid {
@@ -151,6 +365,8 @@
   outline: none;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
+  height: 45px;
+
 }
 
 .reset-button:hover {
@@ -187,6 +403,7 @@
   outline: none;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
+  height: 45px;
 }
 
 /* Disable any press-scale effect */

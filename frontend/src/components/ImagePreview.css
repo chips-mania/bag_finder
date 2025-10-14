@@ -1,3 +1,8 @@
+:root {
+  /* 프리뷰 이미지 높이 CSS 변수 (기본값 600px) */
+  --preview-img-h: 600px;
+}
+
 .image-preview-container {
   width: 100%;
   max-width: 800px;
@@ -54,7 +59,7 @@
 
 .preview-image {
   max-width: 100%;
-  height: 600px;
+  height: var(--preview-img-h, 600px);
   border-radius: 0;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
   object-fit: contain;
@@ -137,7 +142,7 @@
   }
   
   .preview-image {
-    height: 600px;
+    height: var(--preview-img-h, 600px);
   }
   
   .image-details {
