@@ -19,6 +19,8 @@ import numpy as np
 # 내부 모듈
 from models.mobile_sam_model import MobileSAMModel
 from services.session_cache import SessionCache
+from services.supabase_client import supabase_client
+from services.clip_service import get_image_embedding
 from utils.image_utils import (
     validate_image_file,
     resize_image,
@@ -299,6 +301,14 @@ async def predict_mask(body: PredictBody):
 
         width = int(sess.get("width", img.width))
         height = int(sess.get("height", img.height))
+        
+        # 마스크 저장 (검색 시 사용)
+        mask_path = SESS_DIR / f"{body.session_id}_mask.png"
+        mask_pil = Image.fromarray((mask_bin * 255).astype(np.uint8))
+        mask_pil.save(mask_path)
+        
+        # 세션에 마스크 경로 저장
+        sess["last_mask_path"] = str(mask_path)
 
         return PredictResponse(
             contours=contours_json,
@@ -321,6 +331,176 @@ async def delete_session(session_id: str):
     if not ok:
         raise HTTPException(status_code=404, detail="Session not found")
     return {"message": "Session deleted successfully"}
+
+
+# ──────────────────────────────────────────────────────────────────────────────
+# 검색 API
+# ──────────────────────────────────────────────────────────────────────────────
+
+class SearchRequest(BaseModel):
+    session_id: str
+
+
+class BagResult(BaseModel):
+    bag_id: str
+    brand: str | None
+    bag_name: str | None
+    price: float | None
+    material: str | None
+    color: str | None
+    category: str | None
+    thumbnail: str | None
+    link: str | None
+    similarity: float  # 유사도 (0~1)
+
+
+class SearchResponse(BaseModel):
+    top5: List[BagResult]
+    gallery10: List[BagResult]
+
+
+@app.post("/search", response_model=SearchResponse)
+async def search_bags(body: SearchRequest):
+    """
+    세션의 마스크 영역을 임베딩하여 유사한 가방을 검색합니다.
+    unique bag_id 15개 이상 확보될 때까지 반복 조회합니다.
+    """
+    if session_cache is None:
+        raise HTTPException(status_code=500, detail="Session cache not initialized")
+    
+    sess = session_cache.get_session(body.session_id)
+    if not sess:
+        raise HTTPException(status_code=404, detail="Session not found")
+    
+    try:
+        # 1. 세션에서 마스크 이미지 로드
+        image_path = sess.get("image_path")
+        if not image_path or not os.path.exists(image_path):
+            raise HTTPException(status_code=404, detail="Image not found")
+        
+        # 마스크 파일 경로 (세션에 저장된 최신 마스크 사용)
+        mask_path = sess.get("last_mask_path")
+        if not mask_path or not os.path.exists(mask_path):
+            raise HTTPException(status_code=400, detail="No mask found. Please segment the image first.")
+        
+        # 2. 원본 이미지 + 마스크 로드
+        original_img = Image.open(image_path).convert("RGB")
+        mask_img = Image.open(mask_path).convert("L")  # grayscale
+        
+        # 3. 마스크 영역 바운딩박스 추출 및 크롭
+        mask_np = np.array(mask_img)
+        coords = np.column_stack(np.where(mask_np > 0))  # (y, x) 좌표
+        
+        if len(coords) == 0:
+            raise HTTPException(status_code=400, detail="Mask is empty")
+        
+        y_min, x_min = coords.min(axis=0)
+        y_max, x_max = coords.max(axis=0)
+        
+        # 크롭 (바운딩박스)
+        cropped = original_img.crop((x_min, y_min, x_max + 1, y_max + 1))
+        
+        # 크롭된 마스크
+        cropped_mask = mask_img.crop((x_min, y_min, x_max + 1, y_max + 1))
+        cropped_mask_np = np.array(cropped_mask)
+        
+        # 4. 마스크 외부를 흰색으로 채우기
+        cropped_np = np.array(cropped)
+        white_bg = np.ones_like(cropped_np) * 255
+        mask_3ch = np.stack([cropped_mask_np] * 3, axis=-1) > 0
+        final_np = np.where(mask_3ch, cropped_np, white_bg).astype(np.uint8)
+        final_img = Image.fromarray(final_np)
+        
+        # 5. CLIP 임베딩 생성
+        query_embedding = get_image_embedding(final_img)
+        
+        # 6. Supabase에서 유사도 검색 (unique bag_id 15개 확보까지 반복)
+        unique_bags = {}
+        limit = 15
+        max_retries = 5
+        
+        for attempt in range(max_retries):
+            response = supabase_client.table("image_embeddings") \
+                .select("bag_id, embed") \
+                .limit(limit) \
+                .execute()
+            
+            if not response.data:
+                break
+            
+            # 코사인 유사도 계산 (Python)
+            for row in response.data:
+                bag_id = row["bag_id"]
+                embed = row["embed"]
+                
+                # 이미 있으면 스킵
+                if bag_id in unique_bags:
+                    continue
+                
+                # embed가 문자열이면 JSON 파싱
+                if isinstance(embed, str):
+                    import json
+                    embed = json.loads(embed)
+                
+                # 코사인 유사도 계산 (리스트 → float 변환)
+                query_vec = np.array(query_embedding, dtype=np.float32)
+                db_vec = np.array(embed, dtype=np.float32)
+                similarity = np.dot(query_vec, db_vec) / (np.linalg.norm(query_vec) * np.linalg.norm(db_vec))
+                
+                unique_bags[bag_id] = float(similarity)
+            
+            # unique bag_id가 15개 이상이면 종료
+            if len(unique_bags) >= 15:
+                break
+            
+            # 다음 시도에서 더 많이 가져오기
+            limit += 20
+        
+        # 7. 유사도 기준 정렬 (내림차순)
+        sorted_bags = sorted(unique_bags.items(), key=lambda x: x[1], reverse=True)
+        top_15_bag_ids = [bag_id for bag_id, _ in sorted_bags[:15]]
+        
+        # 8. bags 테이블에서 메타데이터 조회
+        bags_response = supabase_client.table("bags") \
+            .select("*") \
+            .in_("bag_id", top_15_bag_ids) \
+            .execute()
+        
+        # bag_id를 키로 하는 딕셔너리 생성
+        bags_dict = {bag["bag_id"]: bag for bag in bags_response.data}
+        
+        # 9. 결과 구성 (순서 유지)
+        results = []
+        for bag_id, similarity in sorted_bags[:15]:
+            bag_data = bags_dict.get(bag_id)
+            if not bag_data:
+                continue
+            
+            results.append(BagResult(
+                bag_id=bag_id,
+                brand=bag_data.get("brand"),
+                bag_name=bag_data.get("bag_name"),
+                price=bag_data.get("price"),
+                material=bag_data.get("material"),
+                color=bag_data.get("color"),
+                category=bag_data.get("category"),
+                thumbnail=bag_data.get("thumbnail"),
+                link=bag_data.get("link"),
+                similarity=similarity
+            ))
+        
+        # 10. top5 / gallery10 분할
+        top5 = results[:5]
+        gallery10 = results[5:15]
+        
+        return SearchResponse(top5=top5, gallery10=gallery10)
+    
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.exception("Search error")
+        raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Entrypoint (개발용)

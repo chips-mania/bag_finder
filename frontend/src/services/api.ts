@@ -54,6 +54,24 @@ export interface PredictResponse {
   iou: number | null;
 }
 
+export interface BagResult {
+  bag_id: string;
+  brand: string | null;
+  bag_name: string | null;
+  price: number | null;
+  material: string | null;
+  color: string | null;
+  category: string | null;
+  thumbnail: string | null;
+  link: string | null;
+  similarity: number;  // 유사도 (0~1)
+}
+
+export interface SearchResponse {
+  top5: BagResult[];
+  gallery10: BagResult[];
+}
+
 export const apiService = {
   // 세션 생성 (이미지 업로드)
   createSession: async (file: File): Promise<SessionResponse> => {
@@ -94,6 +112,17 @@ export const apiService = {
     };
 
     const response = await api.post<PredictResponse>('/predict', payload, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  },
+
+  // 🔍 유사 가방 검색
+  searchBags: async (sessionId: string): Promise<SearchResponse> => {
+    const payload = { session_id: sessionId };
+    const response = await api.post<SearchResponse>('/search', payload, {
       headers: {
         'Content-Type': 'application/json',
       },

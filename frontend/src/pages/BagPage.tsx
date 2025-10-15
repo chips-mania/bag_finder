@@ -1,7 +1,8 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import ImageUpload from '../components/ImageUpload';
 import ImagePreview from '../components/ImagePreview';
-import type { SessionResponse } from '../services/api';
+import type { SessionResponse, BagResult } from '../services/api';
+import { apiService } from '../services/api';
 import './BagPage.css';
 
 interface BagPageProps {
@@ -25,17 +26,13 @@ const BagPage: React.FC<BagPageProps> = ({
   const [promptMode, setPromptMode] = useState<'add' | 'remove' | null>('add');
   const [resetSignal, setResetSignal] = useState(0);
   const [previewHeight, setPreviewHeight] = useState<number>(600);
-
-  // 데모 가방 데이터 (백엔드 정적 경로)
-  const demoBags = Array.from({ length: 20 }, (_, i) => ({
-    id: i + 1,
-    imageUrl: `http://127.0.0.1:8000/static/assets/boston_bag/${i + 1}.jpg`,
-    name: `보스턴백 ${String.fromCharCode(65 + (i % 26))}`,
-    brand: ['Louis Vuitton', 'Gucci', 'Prada', 'Hermès', 'Chanel'][i % 5],
-    price: (i + 1) * 50000,
-    bagType: '보스턴백',
-    material: '가죽',
-  }));
+  const [searchResults, setSearchResults] = useState<{ top5: BagResult[], gallery10: BagResult[] } | null>(null);
+  const [isSearching, setIsSearching] = useState(false);
+  const [expandedColors, setExpandedColors] = useState<Set<string>>(new Set());
+  const colorToggleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
+  const [minPrice, setMinPrice] = useState(0);
+  const [maxPrice, setMaxPrice] = useState(500000);
+  const rangeSliderRef = useRef<HTMLDivElement | null>(null);
 
   // 하단 갤러리 스크롤 제어
   const bottomGalleryRef = useRef<HTMLDivElement | null>(null);
@@ -52,6 +49,127 @@ const BagPage: React.FC<BagPageProps> = ({
     const delta = direction === 'up' ? -el.clientHeight * 0.8 : el.clientHeight * 0.8;
     el.scrollBy({ top: delta, behavior: 'smooth' });
   };
+
+  // 색상 파싱 함수
+  const parseColors = (colorString: string | null): string[] => {
+    if (!colorString) return [];
+    try {
+      // JSON 배열 형태로 파싱 시도
+      const parsed = JSON.parse(colorString);
+      if (Array.isArray(parsed)) {
+        // 배열의 각 요소에서 따옴표와 대괄호 제거
+        return parsed.map(color => color.trim().replace(/['"\[\]]/g, '')).filter(c => c);
+      }
+      return [colorString.trim().replace(/['"\[\]]/g, '')];
+    } catch {
+      // JSON이 아닌 경우 쉼표로 분리
+      return colorString.split(',').map(c => c.trim().replace(/['"\[\]]/g, '')).filter(c => c);
+    }
+  };
+
+  // 외부 클릭 감지
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Element;
+      
+      // 모든 color toggle container를 확인
+      Object.keys(colorToggleRefs.current).forEach(bagId => {
+        const container = colorToggleRefs.current[bagId];
+        if (container && !container.contains(target)) {
+          setExpandedColors(prev => {
+            const newSet = new Set(prev);
+            newSet.delete(bagId);
+            return newSet;
+          });
+        }
+      });
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
+
+  // 가격 범위 시각화 업데이트
+  useEffect(() => {
+    if (rangeSliderRef.current) {
+      const minPercent = (minPrice / 500000) * 100;
+      const maxPercent = (maxPrice / 500000) * 100;
+      
+      rangeSliderRef.current.style.setProperty('--min-percent', `${minPercent}%`);
+      rangeSliderRef.current.style.setProperty('--max-percent', `${maxPercent}%`);
+    }
+  }, [minPrice, maxPrice]);
+
+  // 색상 토글 함수
+  const toggleColorExpansion = (bagId: string) => {
+    setExpandedColors(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(bagId)) {
+        newSet.delete(bagId);
+      } else {
+        newSet.add(bagId);
+      }
+      return newSet;
+    });
+  };
+
+  // 색상명을 색상코드로 변환
+  const getColorCode = (colorName: string): string => {
+    // 여기에 색상명과 색상코드 dict를 입력하세요
+    const colorMap: { [key: string]: string } = {
+      "블랙": "#000000",
+      "그레이": "#999999",
+      "블루": "#2320fc",
+      "그린": "#2bac15",
+      "네이비": "#0c0c69",
+      "브라운": "#964b00",
+      "아이보리": "#fcfcf2",
+      "핑크": "#ff69b4",
+      "레드": "#ff0000",
+      "베이지": "#e7d7a7",
+      "카키": "#5b5a3a",
+      "오렌지": "#ff7f00",
+      "옐로우": "#fbea2a",
+      "다크그린": "#1d4221",
+      "다크그레이": "#53565b",
+      "화이트": "#ffffff",
+      "퍼플": "#880ed4",
+      "민트": "#40c1ab",
+      "버건디": "#660033",
+      "카멜": "#d89f3b",
+      "라임": "#d0fe1d",
+      "스카이블루": "#5bc1e7",
+      "다크네이비": "#1e3250",
+      "다크브라운": "#5c4033",
+      "다크블루": "#092ca6",
+      "다크베이지": "#9f8c76",
+      "라이트그린": "#90EE90"
+    };
+    
+    const normalizedColor = colorName.trim().replace(/['"\[\]]/g, '');
+    return colorMap[normalizedColor] || '#CCCCCC'; // 기본값은 회색
+  };
+
+  // 검색 핸들러
+  const handleSearch = async () => {
+    if (!session) return;
+    
+    setIsSearching(true);
+    try {
+      const results = await apiService.searchBags(session.session_id);
+      setSearchResults(results);
+      setShowResults(true);
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail;
+      const message = typeof detail === 'string' ? detail : '검색 중 오류가 발생했습니다.';
+      onError(message);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
   return (
     <div className="bag-page">
       <div className="bag-header">
@@ -81,15 +199,17 @@ const BagPage: React.FC<BagPageProps> = ({
               <div className="action-buttons">
                 <button 
                   className="search-button"
-                  onClick={() => setShowResults(true)}
+                  onClick={handleSearch}
+                  disabled={isSearching}
                 >
-                  SEARCH
+                  {isSearching ? 'SEARCHING...' : 'SEARCH'}
                 </button>
                 <button 
                   className="reset-button"
                   onClick={() => {
                     onReset();
                     setShowResults(false);
+                    setSearchResults(null);
                     setPromptMode(null);
                   }}
                 >
@@ -125,26 +245,96 @@ const BagPage: React.FC<BagPageProps> = ({
             )}
           </div>
 
-          {showResults && (
-            <div className="results-section" style={{ height: `calc(${previewHeight + 90}px - 6rem)` }}>
+          {showResults && searchResults && (
+            <div className="results-section" style={{ height: `calc(${previewHeight + 90}px - 75px)` }}>
+              <div className="results-header">
+                <h3>유사도 BEST</h3>
+              </div>
               <div className="results-list" ref={resultsListRef}>
-                {demoBags.slice(0, 5).map((bag) => (
-                  <div className="bag-card" key={bag.id}>
-                    <img src={bag.imageUrl} alt={bag.name} />
+                {searchResults.top5.map((bag) => (
+                  <div 
+                    className="bag-card" 
+                    key={bag.bag_id}
+                  >
+                    <img 
+                      src={bag.thumbnail || ''} 
+                      alt={bag.bag_name || 'Bag'} 
+                      onClick={() => bag.link && window.open(bag.link, '_blank')}
+                      style={{ cursor: bag.link ? 'pointer' : 'default' }}
+                    />
                     <div className="bag-info">
                       <div className="bag-info-row">
-                        <span className="bag-name">{bag.name}</span>
+                        <span className="bag-name">{bag.bag_name || 'Unknown'}</span>
                         <span className="separator">|</span>
-                        <span className="bag-brand">{bag.brand}</span>
+                        <span className="bag-brand">{bag.brand || 'Unknown'}</span>
                       </div>
                       <div className="bag-info-row">
-                        <span className="bag-price">{bag.price.toLocaleString()}</span>
+                        <span className="bag-price">{bag.price ? bag.price.toLocaleString() : 'N/A'}</span>
                         <span className="separator">|</span>
-                        <span className="bag-type">{bag.bagType}</span>
+                        <span className="bag-type">{bag.category || 'N/A'}</span>
                         <span className="separator">|</span>
-                        <span className="bag-material">{bag.material}</span>
+                        <span className="bag-material">{bag.material || 'N/A'}</span>
                         <span className="separator">|</span>
-                        <button className="color-button" type="button">색상</button>
+                        <div className="color-circles">
+                          {parseColors(bag.color).length > 6 ? (
+                            <div 
+                              className="color-toggle-container"
+                              ref={(el) => {
+                                if (el) {
+                                  colorToggleRefs.current[bag.bag_id] = el;
+                                }
+                              }}
+                            >
+                              <button 
+                                className="color-toggle-btn"
+                                onClick={() => toggleColorExpansion(bag.bag_id)}
+                              >
+                                상세색상보기
+                              </button>
+                              {expandedColors.has(bag.bag_id) && (
+                                <div className="color-popup">
+                                  <div className="color-popup-content">
+                                    {parseColors(bag.color).map((color, index) => {
+                                      const colorCode = getColorCode(color);
+                                      const isWhite = colorCode.toLowerCase() === '#ffffff' || colorCode.toLowerCase() === '#fff';
+                                      return (
+                                        <div
+                                          key={index}
+                                          className="color-circle"
+                                          style={{ 
+                                            backgroundColor: colorCode,
+                                            border: isWhite ? '1px solid rgb(157, 157, 157)' : '1px solid #ffffff'
+                                          }}
+                                          title={color}
+                                        />
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
+                            </div>
+                          ) : (
+                            parseColors(bag.color).map((color, index) => {
+                              const colorCode = getColorCode(color);
+                              const isWhite = colorCode.toLowerCase() === '#ffffff' || colorCode.toLowerCase() === '#fff';
+                              return (
+                                <div
+                                  key={index}
+                                  className="color-circle"
+                                  style={{ 
+                                    backgroundColor: colorCode,
+                                    border: isWhite ? '1px solid rgb(157, 157, 157)' : '1px solid #ffffff'
+                                  }}
+                                  title={color}
+                                />
+                              );
+                            })
+                          )}
+                        </div>
+                        <span className="separator">|</span>
+                        <span className="similarity-badge" title={`유사도: ${(bag.similarity * 100).toFixed(1)}%`}>
+                          {(bag.similarity * 100).toFixed(1)}%
+                        </span>
                       </div>
                     </div>
                   </div>
@@ -165,13 +355,32 @@ const BagPage: React.FC<BagPageProps> = ({
             </div>
           )}
 
-          {showResults && (
+          {showResults && searchResults && (
             <div className="summary-section">
+              <div className="gallery-header">
+                <h3>추천 가방</h3>
+              </div>
               <div className="bottom-gallery" ref={bottomGalleryRef}>
                 <div className="gallery-track">
-                  {demoBags.map((bag) => (
-                    <div className="gallery-item" key={bag.id}>
-                      <img src={bag.imageUrl} alt={bag.name} />
+                  {searchResults.gallery10.map((bag) => (
+                    <div 
+                      className="gallery-item" 
+                      key={bag.bag_id}
+                      onClick={() => bag.link && window.open(bag.link, '_blank')}
+                      style={{ cursor: bag.link ? 'pointer' : 'default' }}
+                      title={`${bag.bag_name || 'Unknown'} - ${(bag.similarity * 100).toFixed(1)}%`}
+                    >
+                      <div className="gallery-image-container">
+                        <img src={bag.thumbnail || ''} alt={bag.bag_name || 'Bag'} />
+                        <div className="gallery-similarity-badge">
+                          {(bag.similarity * 100).toFixed(1)}%
+                        </div>
+                      </div>
+                      <div className="gallery-item-info">
+                        <div className="gallery-brand">{bag.brand || 'Unknown'}</div>
+                        <div className="gallery-name">{bag.bag_name || 'Unknown'}</div>
+                        <div className="gallery-price">{bag.price ? bag.price.toLocaleString() : 'N/A'}</div>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -191,6 +400,123 @@ const BagPage: React.FC<BagPageProps> = ({
             </div>
           )}
         </div>
+        
+        {/* 필터 검색 섹션 - SEARCH 버튼을 누른 후에만 표시 */}
+        {showResults && (
+        <div className="filter-search-section">
+          <div className="filter-settings">
+            <h3>FILTER</h3>
+            
+            {/* 검색 영역 */}
+            <div className="search-area">
+              <input 
+                type="text" 
+                placeholder="검색어를 입력하세요" 
+                className="search-input"
+              />
+            </div>
+            
+            {/* 필터 컨테이너 */}
+            <div className="filter-container">
+              {/* 필터 영역 */}
+              <div className="filters-area">
+                <div className="filter-group">
+                  <label>Category</label>
+                  <div className="toggle-group">
+                    <button className="toggle-button active">전체</button>
+                    <button className="toggle-button">숄더백</button>
+                    <button className="toggle-button">토트백</button>
+                    <button className="toggle-button">크로스백</button>
+                    <button className="toggle-button">백팩</button>
+                  </div>
+                </div>
+                
+                <div className="filter-group">
+                  <label>Color</label>
+                  <div className="toggle-group">
+                    <button className="toggle-button active">전체</button>
+                    <button className="toggle-button">검정</button>
+                    <button className="toggle-button">갈색</button>
+                    <button className="toggle-button">흰색</button>
+                    <button className="toggle-button">베이지</button>
+                  </div>
+                </div>
+              </div>
+              
+              {/* 가격대 영역 */}
+              <div className="price-filter-area">
+                <div className="filter-group">
+                  <label>Price Range</label>
+                  <div className="price-range">
+                    <div className="range-slider" ref={rangeSliderRef}>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="500000" 
+                        step="10000" 
+                        value={minPrice}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value < maxPrice) {
+                            setMinPrice(value);
+                          }
+                        }}
+                        className="range-input min-range" 
+                      />
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="500000" 
+                        step="10000" 
+                        value={maxPrice}
+                        onChange={(e) => {
+                          const value = parseInt(e.target.value);
+                          if (value > minPrice) {
+                            setMaxPrice(value);
+                          }
+                        }}
+                        className="range-input max-range" 
+                      />
+                      
+                      {/* 최소값 팝업 */}
+                      <div 
+                        className="price-popup min-popup"
+                        style={{
+                          left: `calc(${(minPrice / 500000) * 100}% + 10px)`
+                        }}
+                      >
+                        {minPrice.toLocaleString()}원
+                      </div>
+                      
+                      {/* 최대값 팝업 */}
+                      <div 
+                        className="price-popup max-popup"
+                        style={{
+                          left: `${(maxPrice / 500000) * 100}%`
+                        }}
+                      >
+                        {maxPrice.toLocaleString()}원
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* 버튼 영역 */}
+            <div className="filter-buttons">
+              <button className="filter-search-button">SEARCH</button>
+              <button className="filter-reset-button">RESET</button>
+            </div>
+          </div>
+          <div className="filter-results">
+            <h3>RESULTS</h3>
+            <div className="filter-results-content">
+              {/* 필터 검색 결과가 들어갈 영역 */}
+            </div>
+          </div>
+        </div>
+        )}
       </main>
     </div>
   );
