@@ -40,6 +40,13 @@ const BagPage: React.FC<BagPageProps> = ({
   // 카테고리 관련 상태
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   
+  // 필터 결과 관련 상태
+  const [filterResults, setFilterResults] = useState<any[] | null>(null);
+  const [isFilterSearching, setIsFilterSearching] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages] = useState(5); // 총 5페이지
+  const [totalItems] = useState(50); // 총 50개 아이템
+  
   // 하드코딩된 색상 그룹 데이터
   const COLOR_GROUPS = [
     { id: "1", name: "블랙", color: "#3F3F3F", includedColors: ["블랙"] },
@@ -123,6 +130,41 @@ const BagPage: React.FC<BagPageProps> = ({
       rangeSliderRef.current.style.setProperty('--max-percent', `${maxPercent}%`);
     }
   }, [minPrice, maxPrice]);
+
+  // 필터 검색 함수
+  const handleFilterSearch = async () => {
+    setIsFilterSearching(true);
+    try {
+      // 50개 아이템 생성 (시뮬레이션)
+      const mockItems = Array.from({ length: 50 }, (_, index) => ({
+        id: `item-${index + 1}`,
+        name: `가방 ${index + 1}`,
+        brand: `브랜드 ${Math.floor(index / 10) + 1}`,
+        price: Math.floor(Math.random() * 500000) + 50000,
+        colors: ['블랙', '브라운', '네이비', '레드', '그린'].slice(0, Math.floor(Math.random() * 5) + 1),
+        similarity: Math.random() * 0.3 + 0.7 // 0.7 ~ 1.0
+      }));
+      
+      setFilterResults(mockItems);
+    } catch (error) {
+      console.error('Filter search error:', error);
+    } finally {
+      setIsFilterSearching(false);
+    }
+  };
+
+  // 페이지 변경 함수
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+  };
+
+  // 현재 페이지의 아이템들 가져오기
+  const getCurrentPageItems = () => {
+    if (!filterResults) return [];
+    const startIndex = (currentPage - 1) * 10;
+    const endIndex = startIndex + 10;
+    return filterResults.slice(startIndex, endIndex);
+  };
 
   // 색상 토글 함수
   const toggleColorExpansion = (bagId: string) => {
@@ -622,12 +664,12 @@ const BagPage: React.FC<BagPageProps> = ({
             
             {/* 버튼 영역 */}
             <div className="filter-buttons">
-              <button 
+              <button
                 className="filter-search-button"
-                onClick={handleSearch}
-                disabled={isSearching}
+                onClick={handleFilterSearch}
+                disabled={isFilterSearching}
               >
-                {isSearching ? 'SEARCHING...' : 'SEARCH'}
+                {isFilterSearching ? 'SEARCHING...' : 'SEARCH'}
               </button>
               <button 
                 className="filter-reset-button"
@@ -642,12 +684,78 @@ const BagPage: React.FC<BagPageProps> = ({
               </button>
             </div>
           </div>
-          <div className="filter-results">
-            <h3>RESULTS</h3>
-            <div className="filter-results-content">
-              {/* 필터 검색 결과가 들어갈 영역 */}
+            <div className="filter-results">
+              <h3>RESULTS</h3>
+              <div className="filter-results-content">
+                {isFilterSearching ? (
+                  <div className="loading-message">검색 중...</div>
+                ) : filterResults ? (
+                  <>
+                    {/* 2행 5열 그리드 - 현재 페이지 아이템들 */}
+                    <div className="bag-grid">
+                      {getCurrentPageItems().map((item, index) => (
+                        <div key={item.id} className="bag-card">
+                          <div className="bag-image-container">
+                            <div className="empty-image-placeholder">
+                              <span>이미지</span>
+                            </div>
+                            <div className="similarity-overlay">
+                              {(item.similarity * 100).toFixed(1)}%
+                            </div>
+                          </div>
+                          <div className="bag-info">
+                            <div className="bag-name">{item.name}</div>
+                            <div className="bag-brand">{item.brand}</div>
+                            <div className="bag-price">₩{item.price.toLocaleString()}</div>
+                            <div className="bag-colors">
+                              {item.colors.map((color, colorIndex) => (
+                                <span key={colorIndex} className="color-tag">{color}</span>
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* 페이지네이션 */}
+                    <div className="pagination">
+                      <button
+                        className="page-arrow"
+                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        ←
+                      </button>
+                      
+                      <div className="page-numbers">
+                        {Array.from({ length: totalPages }, (_, i) => {
+                          const pageNum = i + 1;
+                          return (
+                            <button
+                              key={pageNum}
+                              className={`page-number ${currentPage === pageNum ? 'active' : ''}`}
+                              onClick={() => handlePageChange(pageNum)}
+                            >
+                              {pageNum}
+                            </button>
+                          );
+                        })}
+                      </div>
+                      
+                      <button
+                        className="page-arrow"
+                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                        disabled={currentPage === totalPages}
+                      >
+                        →
+                      </button>
+                    </div>
+                  </>
+                ) : (
+                  <div className="no-results">검색 결과가 없습니다.</div>
+                )}
+              </div>
             </div>
-          </div>
         </div>
         )}
       </main>

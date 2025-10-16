@@ -145,7 +145,7 @@
   display: flex;
   flex-direction: column;
   padding-top: 1rem;
-  gap: 3.1rem;
+  gap: 3rem;
 }
 
 .bag-info-row {
@@ -847,11 +847,17 @@
   font-size: 1rem;
   font-family: 'Inter', sans-serif;
   font-weight: 500;
+  min-width: 120px; /* 최소 너비 설정 */
+  width: 120px; /* 고정 너비 설정 */
   cursor: pointer;
   transition: all 0.3s ease;
   outline: none;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
 }
 
@@ -952,7 +958,12 @@
   /* min-width: 80px; */
   width: 84px;
   border-radius: 20px;
-  justify-content: flex-start;
+  justify-content: flex-start; /* 컬러 서클은 왼쪽에 유지 */
+}
+
+.color-group-button .color-name {
+  flex: 1; /* 남은 공간 모두 차지 */
+  text-align: center; /* 텍스트만 중앙 정렬 */
 }
 
 .color-circle {
@@ -1011,4 +1022,206 @@
   grid-template-rows: 1fr;
   gap: 0.5rem;
   width: 100%;
+}
+
+/* 필터 결과 영역 */
+.filter-results {
+  flex: 1;
+  padding: 1rem;
+  background: #ffffff;
+  overflow-y: auto;
+}
+
+.filter-results h3 {
+  margin: 0 0 1rem 0;
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+}
+
+.filter-results-content {
+  height: calc(100% - 3rem);
+}
+
+/* 필터 결과용 가방 그리드 - 2행 5열 */
+.filter-results .bag-grid {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  grid-template-rows: repeat(2, 1fr);
+  gap: 1rem;
+  height: 100%;
+}
+
+/* 필터 결과용 가방 카드 */
+.filter-results .bag-card {
+  background: rgb(255, 255, 255);
+  /* border-radius: 8px; */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  max-height: 300px; /* 카드 최대 높이 제한 */
+  height: 100%; /* 그리드 셀에 맞춤 */
+  gap: 0rem;
+}
+
+.filter-results .bag-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.filter-results .bag-image-container {
+  position: relative;
+  width: 100%;
+  height: 60%; /* 카드 높이의 60% */
+  min-height: 100px; /* 최소 높이 보장 */
+  max-height: 150px; /* 최대 높이 제한 */
+  overflow: hidden;
+  flex-shrink: 0; /* 축소되지 않도록 */
+}
+
+.filter-results .empty-image-placeholder {
+  width: 100%;
+  height: 100%;
+  background: #e9ecef;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #6c757d;
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+
+.filter-results .similarity-overlay {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.7);
+  color: white;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.filter-results .bag-info {
+  padding: 0.75rem;
+  flex: 1; /* 남은 공간 모두 차지 */
+  display: flex;
+  flex-direction: column;
+  min-height: 0; /* flex 아이템이 축소될 수 있도록 */
+  overflow: hidden; /* 내용이 넘치면 숨김 */
+}
+
+.filter-results .bag-name {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #333;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-results .bag-brand {
+  font-size: 0.8rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.filter-results .bag-price {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #000;
+  margin-bottom: 0.5rem;
+}
+
+.filter-results .bag-colors {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin-top: auto;
+}
+
+.filter-results .color-tag {
+  background: #f0f0f0;
+  color: #333;
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  white-space: nowrap;
+}
+
+/* 로딩 및 빈 결과 메시지 */
+.filter-results .loading-message,
+.filter-results .no-results {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 200px;
+  color: #666;
+  font-size: 1rem;
+}
+
+/* 페이지네이션 */
+.filter-results .pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  margin-top: 2rem;
+  padding: 1rem 0;
+}
+
+.filter-results .page-arrow {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.filter-results .page-arrow:hover:not(:disabled) {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.filter-results .page-arrow:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.filter-results .page-numbers {
+  display: flex;
+  gap: 0.25rem;
+}
+
+.filter-results .page-number {
+  background: #f8f9fa;
+  border: 1px solid #ddd;
+  padding: 8px 12px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 40px;
+  font-size: 0.9rem;
+}
+
+.filter-results .page-number:hover {
+  background: #e9ecef;
+  border-color: #adb5bd;
+}
+
+.filter-results .page-number.active {
+  background: #007bff;
+  color: white;
+  border-color: #007bff;
 }
