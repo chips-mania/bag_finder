@@ -120,8 +120,11 @@ export const apiService = {
   },
 
   // 🔍 유사 가방 검색
-  searchBags: async (sessionId: string): Promise<SearchResponse> => {
-    const payload = { session_id: sessionId };
+  searchBags: async (sessionId: string, selectedColors: string[] = []): Promise<SearchResponse> => {
+    const payload = { 
+      session_id: sessionId,
+      selected_colors: selectedColors
+    };
     const response = await api.post<SearchResponse>('/search', payload, {
       headers: {
         'Content-Type': 'application/json',

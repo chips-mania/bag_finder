@@ -33,6 +33,28 @@ const BagPage: React.FC<BagPageProps> = ({
   const [minPrice, setMinPrice] = useState(0);
   const [maxPrice, setMaxPrice] = useState(500000);
   const rangeSliderRef = useRef<HTMLDivElement | null>(null);
+  
+  // 색상 그룹 관련 상태
+  const [selectedColorGroups, setSelectedColorGroups] = useState<Set<string>>(new Set());
+  
+  // 카테고리 관련 상태
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
+  
+  // 하드코딩된 색상 그룹 데이터
+  const COLOR_GROUPS = [
+    { id: "1", name: "블랙", color: "#3F3F3F", includedColors: ["블랙"] },
+    { id: "2", name: "그레이", color: "#666666", includedColors: ["다크그레이", "중간그레이", "라이트그레이"] },
+    { id: "3", name: "화이트", color: "#E3E3E3", includedColors: ["화이트", "아이보리"] },
+    { id: "4", name: "블루", color: "#2320fc", includedColors: ["블루", "다크블루", "네이비", "다크네이비", "스카이블루"] },
+    { id: "5", name: "그린", color: "#2bac15", includedColors: ["그린", "라이트그린", "다크그린", "올리브그린", "카키", "민트", "라임"] },
+    { id: "6", name: "레드", color: "#991515", includedColors: ["레드", "딥레드", "버건디", "브릭"] },
+    { id: "7", name: "베이지", color: "#9f8c76", includedColors: ["카멜", "다크베이지", "베이지", "오트밀"] },
+    { id: "8", name: "브라운", color: "#5c4033", includedColors: ["브라운", "다크브라운", "라이트브라운"] },
+    { id: "9", name: "핑크", color: "#ff69b4", includedColors: ["핑크", "다크핑크", "라이트핑크", "로즈골드"] },
+    { id: "10", name: "오렌지", color: "#ff7f00", includedColors: ["오렌지", "라이트오렌지", "머스타드", "피치"] },
+    { id: "11", name: "옐로우", color: "#fbea2a", includedColors: ["옐로우", "라이트옐로우"] },
+    { id: "12", name: "퍼플", color: "#880ed4", includedColors: ["퍼플", "라벤더"] }
+  ];
 
   // 하단 갤러리 스크롤 제어
   const bottomGalleryRef = useRef<HTMLDivElement | null>(null);
@@ -115,6 +137,32 @@ const BagPage: React.FC<BagPageProps> = ({
     });
   };
 
+  // 색상 그룹 토글 함수
+  const toggleColorGroup = (groupId: string) => {
+    setSelectedColorGroups(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(groupId)) {
+        newSet.delete(groupId);
+      } else {
+        newSet.add(groupId);
+      }
+      return newSet;
+    });
+  };
+
+  // 카테고리 토글 함수
+  const toggleCategory = (category: string) => {
+    setSelectedCategories(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(category)) {
+        newSet.delete(category);
+      } else {
+        newSet.add(category);
+      }
+      return newSet;
+    });
+  };
+
   // 색상명을 색상코드로 변환
   const getColorCode = (colorName: string): string => {
     // 여기에 색상명과 색상코드 dict를 입력하세요
@@ -158,7 +206,17 @@ const BagPage: React.FC<BagPageProps> = ({
     
     setIsSearching(true);
     try {
-      const results = await apiService.searchBags(session.session_id);
+      // 선택된 색상 그룹들의 포함 색상들을 수집
+      const selectedColors: string[] = [];
+      selectedColorGroups.forEach(groupId => {
+        const group = COLOR_GROUPS.find(g => g.id === groupId);
+        if (group) {
+          selectedColors.push(...group.includedColors);
+        }
+      });
+      
+      // 선택된 색상이 없으면 빈 배열로 전송 (모든 색상 포함)
+      const results = await apiService.searchBags(session.session_id, selectedColors);
       setSearchResults(results);
       setShowResults(true);
     } catch (error: any) {
@@ -422,23 +480,82 @@ const BagPage: React.FC<BagPageProps> = ({
               <div className="filters-area">
                 <div className="filter-group">
                   <label>Category</label>
-                  <div className="toggle-group">
-                    <button className="toggle-button active">전체</button>
-                    <button className="toggle-button">숄더백</button>
-                    <button className="toggle-button">토트백</button>
-                    <button className="toggle-button">크로스백</button>
-                    <button className="toggle-button">백팩</button>
+                  <div className="category-container">
+                    {/* 위 그리드: 2행 3열 */}
+                    <div className="toggle-group category-grid-top">
+                      <button 
+                        className={`toggle-button ${selectedCategories.has('숄더백') ? 'active' : ''}`}
+                        onClick={() => toggleCategory('숄더백')}
+                      >
+                        숄더백
+                      </button>
+                      <button 
+                        className={`toggle-button ${selectedCategories.has('토트백') ? 'active' : ''}`}
+                        onClick={() => toggleCategory('토트백')}
+                      >
+                        토트백
+                      </button>
+                      <button 
+                        className={`toggle-button ${selectedCategories.has('크로스백') ? 'active' : ''}`}
+                        onClick={() => toggleCategory('크로스백')}
+                      >
+                        크로스백
+                      </button>
+                      <button 
+                        className={`toggle-button ${selectedCategories.has('보스턴백') ? 'active' : ''}`}
+                        onClick={() => toggleCategory('보스턴백')}
+                      >
+                        보스턴백
+                      </button>
+                      <button 
+                        className={`toggle-button ${selectedCategories.has('클러치') ? 'active' : ''}`}
+                        onClick={() => toggleCategory('클러치')}
+                      >
+                        클러치
+                      </button>
+                      <button 
+                        className={`toggle-button ${selectedCategories.has('백팩') ? 'active' : ''}`}
+                        onClick={() => toggleCategory('백팩')}
+                      >
+                        백팩
+                      </button>
+                    </div>
+                    
+                    {/* 아래 그리드: 1행 2열 */}
+                    <div className="toggle-group category-grid-bottom">
+                      <button 
+                        className={`toggle-button ${selectedCategories.has('에코/캔버스백') ? 'active' : ''}`}
+                        onClick={() => toggleCategory('에코/캔버스백')}
+                      >
+                        에코/캔버스백
+                      </button>
+                      <button 
+                        className={`toggle-button ${selectedCategories.has('웨이스트백') ? 'active' : ''}`}
+                        onClick={() => toggleCategory('웨이스트백')}
+                      >
+                        웨이스트백
+                      </button>
+                    </div>
                   </div>
                 </div>
                 
                 <div className="filter-group">
                   <label>Color</label>
                   <div className="toggle-group">
-                    <button className="toggle-button active">전체</button>
-                    <button className="toggle-button">검정</button>
-                    <button className="toggle-button">갈색</button>
-                    <button className="toggle-button">흰색</button>
-                    <button className="toggle-button">베이지</button>
+                    {COLOR_GROUPS.map((group) => (
+                      <button
+                        key={group.id}
+                        className={`toggle-button color-group-button ${selectedColorGroups.has(group.id) ? 'active' : ''}`}
+                        onClick={() => toggleColorGroup(group.id)}
+                        title={group.includedColors.join(', ')}
+                      >
+                        <div className="color-circle" style={{
+                          backgroundColor: selectedColorGroups.has(group.id) ? group.color : 'transparent',
+                          border: `1px solid ${group.color}`
+                        }}></div>
+                        <span className="color-name">{group.name}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               </div>
@@ -505,8 +622,24 @@ const BagPage: React.FC<BagPageProps> = ({
             
             {/* 버튼 영역 */}
             <div className="filter-buttons">
-              <button className="filter-search-button">SEARCH</button>
-              <button className="filter-reset-button">RESET</button>
+              <button 
+                className="filter-search-button"
+                onClick={handleSearch}
+                disabled={isSearching}
+              >
+                {isSearching ? 'SEARCHING...' : 'SEARCH'}
+              </button>
+              <button 
+                className="filter-reset-button"
+                onClick={() => {
+                  setSelectedCategories(new Set());
+                  setSelectedColorGroups(new Set());
+                  setMinPrice(0);
+                  setMaxPrice(500000);
+                }}
+              >
+                RESET
+              </button>
             </div>
           </div>
           <div className="filter-results">

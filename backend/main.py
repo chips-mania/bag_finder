@@ -339,6 +339,7 @@ async def delete_session(session_id: str):
 
 class SearchRequest(BaseModel):
     session_id: str
+    selected_colors: List[str] = []  # 선택된 색상명들
 
 
 class BagResult(BaseModel):
@@ -460,11 +461,21 @@ async def search_bags(body: SearchRequest):
         sorted_bags = sorted(unique_bags.items(), key=lambda x: x[1], reverse=True)
         top_15_bag_ids = [bag_id for bag_id, _ in sorted_bags[:15]]
         
-        # 8. bags 테이블에서 메타데이터 조회
-        bags_response = supabase_client.table("bags") \
-            .select("*") \
-            .in_("bag_id", top_15_bag_ids) \
-            .execute()
+        # 8. bags 테이블에서 메타데이터 조회 (색상 필터링 적용)
+        query = supabase_client.table("bags").select("*").in_("bag_id", top_15_bag_ids)
+        
+        # 색상 필터링이 있는 경우
+        if body.selected_colors:
+            # 색상 필터링을 위한 OR 조건 생성
+            color_conditions = []
+            for color in body.selected_colors:
+                # ILIKE를 사용하여 대소문자 구분 없이 검색
+                color_conditions.append(f"color.ilike.%{color}%")
+            
+            # OR 조건으로 색상 필터링 적용
+            query = query.or_(",".join(color_conditions))
+        
+        bags_response = query.execute()
         
         # bag_id를 키로 하는 딕셔너리 생성
         bags_dict = {bag["bag_id"]: bag for bag in bags_response.data}
