@@ -21,6 +21,8 @@ from models.mobile_sam_model import MobileSAMModel
 from services.session_cache import SessionCache
 from services.supabase_client import supabase_client
 from services.clip_service import get_image_embedding
+from services.filter_service import FilterService
+from services.similarity_filter_service import SimilarityFilterService
 from utils.image_utils import (
     validate_image_file,
     resize_image,
@@ -70,6 +72,42 @@ class PredictResponse(BaseModel):
     width: int
     height: int
     iou: float | None
+
+class FilterSearchRequest(BaseModel):
+    selected_categories: List[str] = []
+    selected_colors: List[str] = []
+    min_price: float = 4900
+    max_price: float = 1500000
+    page: int = 1
+    limit: int = 10  # 페이지당 10개 아이템 (최대 50개)
+
+class SimilarityFilterSearchRequest(BaseModel):
+    session_id: str
+    selected_categories: List[str] = []
+    selected_colors: List[str] = []
+    min_price: float = 4900
+    max_price: float = 1500000
+    page: int = 1
+    limit: int = 10  # 페이지당 10개 아이템 (최대 50개)
+
+class BagResult(BaseModel):
+    bag_id: str
+    bag_name: str
+    brand: str
+    price: float
+    material: str
+    color: str  # JSON 문자열로 저장
+    category: str
+    link: str
+    thumbnail: str
+    detail: str
+    similarity: float
+
+class FilterSearchResponse(BaseModel):
+    results: List[BagResult]
+    total_count: int
+    total_pages: int
+    current_page: int
 
 # ──────────────────────────────────────────────────────────────────────────────
 # Lifespan
@@ -511,6 +549,112 @@ async def search_bags(body: SearchRequest):
     except Exception as e:
         logger.exception("Search error")
         raise HTTPException(status_code=500, detail=f"Search failed: {str(e)}")
+
+
+@app.post("/filter-search", response_model=FilterSearchResponse)
+async def filter_search_bags(body: FilterSearchRequest):
+    """
+    필터 조건에 따라 가방을 검색합니다.
+    """
+    try:
+        # 필터 서비스 인스턴스 생성
+        filter_service = FilterService()
+        
+        # 필터 검색 실행
+        results, total_count = await filter_service.search_bags(
+            categories=body.selected_categories,
+            colors=body.selected_colors,
+            min_price=body.min_price,
+            max_price=body.max_price,
+            page=body.page,
+            limit=body.limit
+        )
+        
+        # 총 페이지 수 계산
+        total_pages = filter_service.calculate_total_pages(total_count, body.limit)
+        
+        # 딕셔너리 리스트로 변환 (Pydantic 모델 검증을 위해)
+        bag_results = []
+        for item in results:
+            bag_results.append({
+                'bag_id': item['bag_id'],
+                'bag_name': item['bag_name'],
+                'brand': item['brand'],
+                'price': item['price'],
+                'material': item['material'],
+                'color': item['color'],
+                'category': item['category'],
+                'link': item['link'],
+                'thumbnail': item['thumbnail'],
+                'detail': item['detail'],
+                'similarity': item['similarity']
+            })
+        
+        return FilterSearchResponse(
+            results=bag_results,
+            total_count=total_count,
+            total_pages=total_pages,
+            current_page=body.page
+        )
+    
+    except Exception as e:
+        logger.exception("Filter search error")
+        raise HTTPException(status_code=500, detail=f"Filter search failed: {str(e)}")
+
+
+@app.post("/filter-search-with-similarity", response_model=FilterSearchResponse)
+async def filter_search_bags_with_similarity(body: SimilarityFilterSearchRequest):
+    """
+    세션의 크롭된 이미지와 유사도를 계산하여 필터 검색합니다.
+    """
+    try:
+        # 유사도 기반 필터 서비스 인스턴스 생성
+        if session_cache is None:
+            raise HTTPException(status_code=500, detail="Session cache not initialized")
+        
+        similarity_filter_service = SimilarityFilterService(session_cache)
+        
+        # 유사도 기반 필터 검색 실행
+        results, total_count = await similarity_filter_service.search_bags_with_similarity(
+            session_id=body.session_id,
+            categories=body.selected_categories,
+            colors=body.selected_colors,
+            min_price=body.min_price,
+            max_price=body.max_price,
+            page=body.page,
+            limit=body.limit
+        )
+        
+        # 총 페이지 수 계산
+        total_pages = similarity_filter_service.calculate_total_pages(total_count, body.limit)
+        
+        # 딕셔너리 리스트로 변환 (Pydantic 모델 검증을 위해)
+        bag_results = []
+        for item in results:
+            bag_results.append({
+                'bag_id': item['bag_id'],
+                'bag_name': item['bag_name'],
+                'brand': item['brand'],
+                'price': item['price'],
+                'material': item['material'],
+                'color': item['color'],
+                'category': item['category'],
+                'link': item['link'],
+                'thumbnail': item['thumbnail'],
+                'detail': item['detail'],
+                'similarity': item['similarity']
+            })
+        
+        return FilterSearchResponse(
+            results=bag_results,
+            total_count=total_count,
+            total_pages=total_pages,
+            current_page=body.page
+        )
+    
+    except Exception as e:
+        logger.exception("Similarity filter search error")
+        raise HTTPException(status_code=500, detail=f"Similarity filter search failed: {str(e)}")
 
 
 # ──────────────────────────────────────────────────────────────────────────────

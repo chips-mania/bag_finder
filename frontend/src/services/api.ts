@@ -60,7 +60,7 @@ export interface BagResult {
   bag_name: string | null;
   price: number | null;
   material: string | null;
-  color: string | null;
+  color: string | null;  // JSON 문자열
   category: string | null;
   thumbnail: string | null;
   link: string | null;
@@ -70,6 +70,32 @@ export interface BagResult {
 export interface SearchResponse {
   top5: BagResult[];
   gallery10: BagResult[];
+}
+
+export interface FilterSearchRequest {
+  selected_categories: string[];
+  selected_colors: string[];
+  min_price: number;
+  max_price: number;
+  page: number;
+  limit: number;
+}
+
+export interface SimilarityFilterSearchRequest {
+  session_id: string;
+  selected_categories: string[];
+  selected_colors: string[];
+  min_price: number;
+  max_price: number;
+  page: number;
+  limit: number;
+}
+
+export interface FilterSearchResponse {
+  results: BagResult[];
+  total_count: number;
+  total_pages: number;
+  current_page: number;
 }
 
 export const apiService = {
@@ -126,6 +152,57 @@ export const apiService = {
       selected_colors: selectedColors
     };
     const response = await api.post<SearchResponse>('/search', payload, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  },
+
+  // 🔍 필터 검색
+  filterSearchBags: async (
+    selectedCategories: string[] = [],
+    selectedColors: string[] = [],
+    minPrice: number = 4900,
+    maxPrice: number = 1500000,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<FilterSearchResponse> => {
+    const payload: FilterSearchRequest = {
+      selected_categories: selectedCategories,
+      selected_colors: selectedColors,
+      min_price: minPrice,
+      max_price: maxPrice,
+      page: page,
+      limit: limit
+    };
+    const response = await api.post<FilterSearchResponse>('/filter-search', payload, {
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+    return response.data;
+  },
+
+  filterSearchBagsWithSimilarity: async (
+    sessionId: string,
+    selectedCategories: string[] = [],
+    selectedColors: string[] = [],
+    minPrice: number = 4900,
+    maxPrice: number = 1500000,
+    page: number = 1,
+    limit: number = 10
+  ): Promise<FilterSearchResponse> => {
+    const payload: SimilarityFilterSearchRequest = {
+      session_id: sessionId,
+      selected_categories: selectedCategories,
+      selected_colors: selectedColors,
+      min_price: minPrice,
+      max_price: maxPrice,
+      page: page,
+      limit: limit
+    };
+    const response = await api.post<FilterSearchResponse>('/filter-search-with-similarity', payload, {
       headers: {
         'Content-Type': 'application/json',
       },

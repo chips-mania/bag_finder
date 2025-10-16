@@ -230,12 +230,12 @@
   top: 4px; /* 원하는 만큼 조절 (예: 2~6px) */
 }
 
-.color-circle {
+/* .color-circle {
   width: 16px;
   height: 16px;
   border-radius: 50%;
   display: inline-block;
-}
+} */
 
 .color-toggle-container {
   position: relative;
@@ -268,7 +268,7 @@
   bottom: 100%;
   left: 0;
   margin-bottom: 8px;
-  z-index: 1000;
+  z-index: 10000;
 }
 
 .color-popup-content {
@@ -633,7 +633,7 @@
 /* 필터 검색 섹션 */
 .filter-search-section {
   width: 100%;
-  height: 690px;
+  height: 700px;
   display: flex;
   /* border: 1px solid #e2e2e2;  흰색으로 설정되어 있어서 안 보임 */
   gap: 1rem;
@@ -1027,13 +1027,21 @@
 /* 필터 결과 영역 */
 .filter-results {
   flex: 1;
-  padding: 1rem;
+  padding: 1 1.5rem;
   background: #ffffff;
   overflow-y: auto;
 }
 
+.filter-results-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
 .filter-results h3 {
-  margin: 0 0 1rem 0;
+  margin: 0;
+  margin-bottom: 0.5rem;
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
@@ -1051,6 +1059,7 @@
   grid-template-rows: repeat(2, 1fr);
   gap: 1rem;
   height: 100%;
+  width: 100%; /* 부모 컨테이너의 가로길이에 맞춤 */
 }
 
 /* 필터 결과용 가방 카드 */
@@ -1058,14 +1067,17 @@
   background: rgb(255, 255, 255);
   /* border-radius: 8px; */
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow: hidden; /* 이미지 컨테이너는 hidden 유지 */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
   max-height: 300px; /* 카드 최대 높이 제한 */
   height: 100%; /* 그리드 셀에 맞춤 */
+  width: 100%; /* 그리드 셀 가로길이에 맞춤 */
   gap: 0rem;
+  position: relative; /* 팝업 위치 기준점 */
 }
+
 
 .filter-results .bag-card:hover {
   transform: translateY(-2px);
@@ -1074,15 +1086,23 @@
 
 .filter-results .bag-image-container {
   position: relative;
-  width: 100%;
-  height: 60%; /* 카드 높이의 60% */
-  min-height: 100px; /* 최소 높이 보장 */
-  max-height: 150px; /* 최대 높이 제한 */
-  overflow: hidden;
+  width: 100%; /* bag-card의 가로길이와 동일 */
+  aspect-ratio: 1; /* 정사각형 보장 (1:1 비율) */
+  overflow: hidden; /* 이미지가 컨테이너를 벗어나지 않도록 */
   flex-shrink: 0; /* 축소되지 않도록 */
+  box-sizing: border-box; /* 패딩/보더 포함 */
+  z-index: 1; /* 이미지 컨테이너의 z-index 설정 */
 }
 
-.filter-results .empty-image-placeholder {
+.filter-results .bag-image {
+  width: 100%; /* bag-image-container의 가로길이와 동일 */
+  height: 100%; /* bag-image-container의 높이와 동일 */
+  object-fit: cover;
+  display: block; /* 인라인 요소 여백 제거 */
+  /* border-radius: 8px 8px 0 0; */
+}
+
+/* .filter-results .empty-image-placeholder {
   width: 100%;
   height: 100%;
   background: #e9ecef;
@@ -1092,18 +1112,23 @@
   color: #6c757d;
   font-size: 0.9rem;
   font-weight: 500;
+} */
+
+.filter-results .empty-image-placeholder.hidden {
+  display: none;
 }
 
 .filter-results .similarity-overlay {
   position: absolute;
-  top: 8px;
-  left: 8px;
-  background: rgba(0, 0, 0, 0.7);
+  top: 4px;
+  left: 4px;
+  background: #28a745;
   color: white;
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-size: 0.75rem;
+  padding: 2px 5.4px;
+  border-radius: 8px;
+  font-size: 0.65rem;
   font-weight: 600;
+  z-index: 10;
 }
 
 .filter-results .bag-info {
@@ -1112,41 +1137,80 @@
   display: flex;
   flex-direction: column;
   min-height: 0; /* flex 아이템이 축소될 수 있도록 */
-  overflow: hidden; /* 내용이 넘치면 숨김 */
+  overflow: visible; /* 팝업이 보이도록 */
+  gap: 0.1rem;
+  position: relative;
+  z-index: 2; /* 이미지보다 위에 표시 */
+}
+
+.filter-results .bag-colors {
+  display: flex;
+  gap: 0.25rem;
+  flex-wrap: nowrap; /* 줄바꿈 방지 */
+  margin-bottom: 0.4rem;
+  position: relative;
+  align-items: center; /* 세로 중앙 정렬 */
+}
+
+.filter-results .color-circle {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  /* border: 1px solid #ddd; */
+  flex-shrink: 0; /* 축소되지 않도록 */
+}
+
+.filter-results .color-detail-button {
+  background: #ffffff;
+  /* border: 1px solid #ddd; */
+  border-radius: 4px;
+  padding: 0px 0px;
+  font-size: 0.7rem;
+  color: #878787;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  /* width: 70%; */
+  margin-right: auto; /* 오른쪽으로 밀어내기 */
+  right: 1px;
+  position: relative;
+  flex-shrink: 0; /* 축소되지 않도록 */
+}
+
+.filter-results .color-detail-button:hover {
+  background: #ffffff;
+  border-color: #ffffff;
+  overflow: hidden;
 }
 
 .filter-results .bag-name {
-  font-size: 0.9rem;
+  font-size: 0.8rem;
   font-weight: 600;
   color: #333;
   margin-bottom: 0.25rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .filter-results .bag-brand {
-  font-size: 0.8rem;
+  font-size: 0.7rem;
   color: #666;
-  margin-bottom: 0.25rem;
+  margin-bottom: 0.1rem;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  max-width: 150px;
 }
 
 .filter-results .bag-price {
-  font-size: 0.85rem;
+  font-size: 1.2rem;
   font-weight: 600;
   color: #000;
-  margin-bottom: 0.5rem;
+  margin-bottom: 0.2rem;
+  margin-top: auto; /* bag-info 영역의 가장 아래로 고정 */
 }
 
-.filter-results .bag-colors {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
-  margin-top: auto;
-}
 
 .filter-results .color-tag {
   background: #f0f0f0;
@@ -1168,7 +1232,17 @@
   font-size: 1rem;
 }
 
-/* 페이지네이션 */
+/* 페이지네이션 - 헤더 우측 */
+.filter-results .pagination-top {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+/* 페이지네이션 - 하단 (기존) */
 .filter-results .pagination {
   display: flex;
   align-items: center;
@@ -1179,19 +1253,57 @@
 }
 
 .filter-results .page-arrow {
-  background: #f8f9fa;
-  border: 1px solid #ddd;
+  background: #ffffff;
+  /* border: 1px solid #ddd; */
   padding: 8px 12px;
-  border-radius: 4px;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 1rem;
   font-weight: 600;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* 왼쪽 화살표 (←) - 검정 삼각형 */
+.filter-results .page-arrow:first-child::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-right: 8px solid #000;
+  display: block;
+}
+
+/* 오른쪽 화살표 (→) - 검정 삼각형 */
+.filter-results .page-arrow:last-child::before {
+  content: '';
+  width: 0;
+  height: 0;
+  border-top: 6px solid transparent;
+  border-bottom: 6px solid transparent;
+  border-left: 8px solid #000;
+  display: block;
+}
+
+/* 호버 효과 완전 제거 */
+.filter-results .page-arrow:hover {
+  background: #ffffff !important;
+  border-color: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .filter-results .page-arrow:hover:not(:disabled) {
-  background: #e9ecef;
-  border-color: #adb5bd;
+  background: #ffffff !important;
+  border-color: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 .filter-results .page-arrow:disabled {
@@ -1199,29 +1311,54 @@
   cursor: not-allowed;
 }
 
+.filter-results .page-arrow:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+}
+
 .filter-results .page-numbers {
   display: flex;
-  gap: 0.25rem;
+  gap: 0.4rem;
+  align-items: baseline;
 }
 
 .filter-results .page-number {
-  background: #f8f9fa;
-  border: 1px solid #ddd;
-  padding: 8px 12px;
-  border-radius: 4px;
+  background: #ffffff;
+  /* border: 1px solid #ddd; */
+  padding: 2px 8px;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
-  min-width: 40px;
+  min-width: 10px;
+  width: 5px;
   font-size: 0.9rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
 }
 
+/* 페이지 번호 호버 효과 완전 제거 */
 .filter-results .page-number:hover {
-  background: #e9ecef;
-  border-color: #adb5bd;
+  background: #ffffff !important;
+  border-color: transparent !important;
+  transform: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+.filter-results .page-number:focus {
+  outline: none;
+  border: none;
+  box-shadow: none;
+  align-items: baseline;
 }
 
 .filter-results .page-number.active {
-  background: #007bff;
-  color: white;
-  border-color: #007bff;
+  background: transparent;
+  color: #000;
+  border: none;
+  border-bottom: 2px solid #000;
+  font-weight: 600;
 }

@@ -30,10 +30,10 @@ const BagPage: React.FC<BagPageProps> = ({
   const [isSearching, setIsSearching] = useState(false);
   const [expandedColors, setExpandedColors] = useState<Set<string>>(new Set());
   const colorToggleRefs = useRef<{ [key: string]: HTMLDivElement | null }>({});
-  const [minPrice, setMinPrice] = useState(0);
-  const [maxPrice, setMaxPrice] = useState(500000);
+  const [minPrice, setMinPrice] = useState(4900);
+  const [maxPrice, setMaxPrice] = useState(1500000);
   const rangeSliderRef = useRef<HTMLDivElement | null>(null);
-  
+
   // 색상 그룹 관련 상태
   const [selectedColorGroups, setSelectedColorGroups] = useState<Set<string>>(new Set());
   
@@ -41,11 +41,11 @@ const BagPage: React.FC<BagPageProps> = ({
   const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
   
   // 필터 결과 관련 상태
-  const [filterResults, setFilterResults] = useState<any[] | null>(null);
+  const [allFilterResults, setAllFilterResults] = useState<BagResult[] | null>(null);
   const [isFilterSearching, setIsFilterSearching] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
-  const [totalPages] = useState(5); // 총 5페이지
-  const [totalItems] = useState(50); // 총 50개 아이템
+  const [totalPages, setTotalPages] = useState(1);
+  const itemsPerPage = 10; // 페이지당 10개씩 표시
   
   // 하드코딩된 색상 그룹 데이터
   const COLOR_GROUPS = [
@@ -54,7 +54,7 @@ const BagPage: React.FC<BagPageProps> = ({
     { id: "3", name: "화이트", color: "#E3E3E3", includedColors: ["화이트", "아이보리"] },
     { id: "4", name: "블루", color: "#2320fc", includedColors: ["블루", "다크블루", "네이비", "다크네이비", "스카이블루"] },
     { id: "5", name: "그린", color: "#2bac15", includedColors: ["그린", "라이트그린", "다크그린", "올리브그린", "카키", "민트", "라임"] },
-    { id: "6", name: "레드", color: "#991515", includedColors: ["레드", "딥레드", "버건디", "브릭"] },
+    { id: "6", name: "레드", color: "#ff0000", includedColors: ["레드", "딥레드", "버건디", "브릭"] },
     { id: "7", name: "베이지", color: "#9f8c76", includedColors: ["카멜", "다크베이지", "베이지", "오트밀"] },
     { id: "8", name: "브라운", color: "#5c4033", includedColors: ["브라운", "다크브라운", "라이트브라운"] },
     { id: "9", name: "핑크", color: "#ff69b4", includedColors: ["핑크", "다크핑크", "라이트핑크", "로즈골드"] },
@@ -123,31 +123,44 @@ const BagPage: React.FC<BagPageProps> = ({
   // 가격 범위 시각화 업데이트
   useEffect(() => {
     if (rangeSliderRef.current) {
-      const minPercent = (minPrice / 500000) * 100;
-      const maxPercent = (maxPrice / 500000) * 100;
+      const minPercent = (minPrice / 1500000) * 100;
+      const maxPercent = (maxPrice / 1500000) * 100;
       
       rangeSliderRef.current.style.setProperty('--min-percent', `${minPercent}%`);
       rangeSliderRef.current.style.setProperty('--max-percent', `${maxPercent}%`);
     }
   }, [minPrice, maxPrice]);
 
-  // 필터 검색 함수
+  // 필터 검색 함수 - 한번에 50개 가져오기
   const handleFilterSearch = async () => {
+    if (!session) {
+      onError('세션이 없습니다. 이미지를 다시 업로드해주세요.');
+      return;
+    }
+
     setIsFilterSearching(true);
     try {
-      // 50개 아이템 생성 (시뮬레이션)
-      const mockItems = Array.from({ length: 50 }, (_, index) => ({
-        id: `item-${index + 1}`,
-        name: `가방 ${index + 1}`,
-        brand: `브랜드 ${Math.floor(index / 10) + 1}`,
-        price: Math.floor(Math.random() * 500000) + 50000,
-        colors: ['블랙', '브라운', '네이비', '레드', '그린'].slice(0, Math.floor(Math.random() * 5) + 1),
-        similarity: Math.random() * 0.3 + 0.7 // 0.7 ~ 1.0
-      }));
+      // 유사도 기반 필터 검색 API 호출 - 한번에 50개 가져오기
+      const response = await apiService.filterSearchBagsWithSimilarity(
+        session.session_id,
+        Array.from(selectedCategories),
+        Array.from(selectedColorGroups).flatMap(groupId => {
+          const group = COLOR_GROUPS.find(g => g.id === groupId);
+          return group ? group.includedColors : [];
+        }),
+        minPrice,
+        maxPrice,
+        1, // 항상 1페이지로 요청
+        50  // 한번에 50개 가져오기
+      );
       
-      setFilterResults(mockItems);
-    } catch (error) {
-      console.error('Filter search error:', error);
+      setAllFilterResults(response.results);
+      setTotalPages(5); // 50개를 10개씩 나누면 5페이지
+      setCurrentPage(1); // 첫 페이지로 리셋
+    } catch (error: any) {
+      const detail = error?.response?.data?.detail;
+      const message = typeof detail === 'string' ? detail : '필터 검색 중 오류가 발생했습니다.';
+      onError(message);
     } finally {
       setIsFilterSearching(false);
     }
@@ -158,12 +171,12 @@ const BagPage: React.FC<BagPageProps> = ({
     setCurrentPage(page);
   };
 
-  // 현재 페이지의 아이템들 가져오기
-  const getCurrentPageItems = () => {
-    if (!filterResults) return [];
-    const startIndex = (currentPage - 1) * 10;
-    const endIndex = startIndex + 10;
-    return filterResults.slice(startIndex, endIndex);
+  // 현재 페이지에 해당하는 데이터 계산
+  const getCurrentPageResults = () => {
+    if (!allFilterResults) return [];
+    const startIndex = (currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    return allFilterResults.slice(startIndex, endIndex);
   };
 
   // 색상 토글 함수
@@ -610,8 +623,8 @@ const BagPage: React.FC<BagPageProps> = ({
                     <div className="range-slider" ref={rangeSliderRef}>
                       <input 
                         type="range" 
-                        min="0" 
-                        max="500000" 
+                        min="4900" 
+                        max="1500000" 
                         step="10000" 
                         value={minPrice}
                         onChange={(e) => {
@@ -624,8 +637,8 @@ const BagPage: React.FC<BagPageProps> = ({
                       />
                       <input 
                         type="range" 
-                        min="0" 
-                        max="500000" 
+                        min="4900" 
+                        max="1500000" 
                         step="10000" 
                         value={maxPrice}
                         onChange={(e) => {
@@ -641,20 +654,20 @@ const BagPage: React.FC<BagPageProps> = ({
                       <div 
                         className="price-popup min-popup"
                         style={{
-                          left: `calc(${(minPrice / 500000) * 100}% + 10px)`
+                          left: `calc(${(minPrice / 1500000) * 100}% + 10px)`
                         }}
                       >
-                        {minPrice.toLocaleString()}원
+                        {minPrice.toLocaleString()}
                       </div>
                       
                       {/* 최대값 팝업 */}
                       <div 
                         className="price-popup max-popup"
                         style={{
-                          left: `${(maxPrice / 500000) * 100}%`
+                          left: `${(maxPrice / 1500000) * 100}%`
                         }}
                       >
-                        {maxPrice.toLocaleString()}원
+                        {maxPrice.toLocaleString()}
                       </div>
                     </div>
                   </div>
@@ -676,27 +689,74 @@ const BagPage: React.FC<BagPageProps> = ({
                 onClick={() => {
                   setSelectedCategories(new Set());
                   setSelectedColorGroups(new Set());
-                  setMinPrice(0);
-                  setMaxPrice(500000);
+                  setMinPrice(4900);
+                  setMaxPrice(1500000);
                 }}
               >
                 RESET
               </button>
             </div>
           </div>
-            <div className="filter-results">
-              <h3>RESULTS</h3>
-              <div className="filter-results-content">
+          <div className="filter-results">
+              <div className="filter-results-header">
+            <h3>RESULTS</h3>
+                <div className="pagination-top">
+                  <button
+                    className="page-arrow"
+                    onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                    disabled={currentPage === 1}
+                  >
+                  </button>
+                  
+                  <div className="page-numbers">
+                    {Array.from({ length: Math.min(totalPages, 5) }, (_, i) => {
+                      const pageNum = i + 1;
+                      return (
+                        <button
+                          key={pageNum}
+                          className={`page-number ${currentPage === pageNum ? 'active' : ''}`}
+                          onClick={() => handlePageChange(pageNum)}
+                        >
+                          {pageNum}
+                        </button>
+                      );
+                    })}
+                  </div>
+                  
+                  <button
+                    className="page-arrow"
+                    onClick={() => handlePageChange(Math.min(Math.min(totalPages, 5), currentPage + 1))}
+                    disabled={currentPage === Math.min(totalPages, 5)}
+                  >
+                  </button>
+                </div>
+              </div>
+            <div className="filter-results-content">
                 {isFilterSearching ? (
                   <div className="loading-message">검색 중...</div>
-                ) : filterResults ? (
+                ) : allFilterResults ? (
                   <>
+
                     {/* 2행 5열 그리드 - 현재 페이지 아이템들 */}
                     <div className="bag-grid">
-                      {getCurrentPageItems().map((item, index) => (
-                        <div key={item.id} className="bag-card">
+                      {getCurrentPageResults().map((item) => (
+                        <div key={item.bag_id} className="bag-card">
                           <div className="bag-image-container">
-                            <div className="empty-image-placeholder">
+                            {item.thumbnail ? (
+                              <img 
+                                src={item.thumbnail} 
+                                alt={item.bag_name || '가방 이미지'}
+                                className="bag-image"
+                                onClick={() => item.link && window.open(item.link, '_blank')}
+                                style={{ cursor: item.link ? 'pointer' : 'default' }}
+                                onError={(e) => {
+                                  const target = e.target as HTMLImageElement;
+                                  target.style.display = 'none';
+                                  target.nextElementSibling?.classList.remove('hidden');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`empty-image-placeholder ${item.thumbnail ? 'hidden' : ''}`}>
                               <span>이미지</span>
                             </div>
                             <div className="similarity-overlay">
@@ -704,58 +764,66 @@ const BagPage: React.FC<BagPageProps> = ({
                             </div>
                           </div>
                           <div className="bag-info">
-                            <div className="bag-name">{item.name}</div>
-                            <div className="bag-brand">{item.brand}</div>
-                            <div className="bag-price">₩{item.price.toLocaleString()}</div>
                             <div className="bag-colors">
-                              {item.colors.map((color, colorIndex) => (
-                                <span key={colorIndex} className="color-tag">{color}</span>
-                              ))}
+                              {parseColors(item.color).length > 6 ? (
+                                <button 
+                                  className="color-detail-button"
+                                  onClick={() => toggleColorExpansion(item.bag_id)}
+                                >
+                                  상세색상보기
+                                </button>
+                              ) : (
+                                parseColors(item.color).map((color, colorIndex) => {
+                                  const colorCode = getColorCode(color);
+                                  const isWhite = colorCode.toLowerCase() === '#ffffff' || colorCode.toLowerCase() === '#fff' || colorCode.toLowerCase() === '#e3e3e3' || colorCode.toLowerCase() === '#fcfcf2';
+                                  return (
+                                    <div 
+                                      key={colorIndex} 
+                                      className={`color-circle ${isWhite ? 'white-color' : ''}`}
+                                      style={{ 
+                                        backgroundColor: colorCode,
+                                        border: isWhite ? '1px solid #ddd' : 'none'
+                                      }}
+                                      title={color}
+                                    ></div>
+                                  );
+                                })
+                              )}
+                              {expandedColors.has(item.bag_id) && (
+                                <div className="color-popup">
+                                  <div className="color-popup-content">
+                                    {parseColors(item.color).map((color, colorIndex) => {
+                                      const colorCode = getColorCode(color);
+                                      const isWhite = colorCode.toLowerCase() === '#ffffff' || colorCode.toLowerCase() === '#fff' || colorCode.toLowerCase() === '#e3e3e3' || colorCode.toLowerCase() === '#fcfcf2';
+                                      return (
+                                        <div 
+                                          key={colorIndex} 
+                                          className={`color-circle ${isWhite ? 'white-color' : ''}`}
+                                          style={{ 
+                                            backgroundColor: colorCode,
+                                            border: isWhite ? '1px solid #ddd' : 'none'
+                                          }}
+                                          title={color}
+                                        ></div>
+                                      );
+                                    })}
+                                  </div>
+                                </div>
+                              )}
                             </div>
+                            <div className="bag-brand">{item.brand}</div>
+                            <div className="bag-name">{item.bag_name}</div>
+                            <div className="bag-price">{item.price?.toLocaleString()}</div>
                           </div>
                         </div>
                       ))}
-                    </div>
-
-                    {/* 페이지네이션 */}
-                    <div className="pagination">
-                      <button
-                        className="page-arrow"
-                        onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                        disabled={currentPage === 1}
-                      >
-                        ←
-                      </button>
-                      
-                      <div className="page-numbers">
-                        {Array.from({ length: totalPages }, (_, i) => {
-                          const pageNum = i + 1;
-                          return (
-                            <button
-                              key={pageNum}
-                              className={`page-number ${currentPage === pageNum ? 'active' : ''}`}
-                              onClick={() => handlePageChange(pageNum)}
-                            >
-                              {pageNum}
-                            </button>
-                          );
-                        })}
-                      </div>
-                      
-                      <button
-                        className="page-arrow"
-                        onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                        disabled={currentPage === totalPages}
-                      >
-                        →
-                      </button>
                     </div>
                   </>
                 ) : (
                   <div className="no-results">검색 결과가 없습니다.</div>
                 )}
-              </div>
             </div>
+          </div>
         </div>
         )}
       </main>
