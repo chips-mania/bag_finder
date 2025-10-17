@@ -4,6 +4,7 @@ import './IntroductionPage.css';
 const IntroductionPage: React.FC = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
+  const [shoppingMallIndex, setShoppingMallIndex] = useState(0);
 
   const bagImages = [
     { id: '1', imageUrl: '/home_imgs/home_bags/backpack.png' },
@@ -16,6 +17,14 @@ const IntroductionPage: React.FC = () => {
     { id: '8', imageUrl: '/home_imgs/home_bags/waist_bag.png' }
   ];
 
+  const shoppingMallImages = [
+    { id: '1', imageUrl: '/home_imgs/shopping_mall_imgs/29cm.png' },
+    { id: '2', imageUrl: '/home_imgs/shopping_mall_imgs/kream.png' },
+    { id: '3', imageUrl: '/home_imgs/shopping_mall_imgs/musinsa.png' },
+    { id: '4', imageUrl: '/home_imgs/shopping_mall_imgs/wconcept.png' },
+    { id: '5', imageUrl: '/home_imgs/shopping_mall_imgs/zigzag.png' }
+  ];
+
   const len = bagImages.length;
 
   // 자동 슬라이드
@@ -26,6 +35,19 @@ const IntroductionPage: React.FC = () => {
     
     return () => clearInterval(interval);
   }, [len]);
+
+  // 쇼핑몰 이미지 슬라이드 함수들
+  const handlePrevMall = () => {
+    setShoppingMallIndex((prev) => 
+      prev === 0 ? shoppingMallImages.length - 1 : prev - 1
+    );
+  };
+
+  const handleNextMall = () => {
+    setShoppingMallIndex((prev) => 
+      prev === shoppingMallImages.length - 1 ? 0 : prev + 1
+    );
+  };
 
   // 3D 변환 계산
   const getImageStyle = (index: number) => {
@@ -92,6 +114,37 @@ const IntroductionPage: React.FC = () => {
               />
             ))}
           </div>
+        </div>
+      </div>
+      <div className="bottom-section">
+        <div className="shopping-mall-slider">
+          <button className="slider-arrow left" onClick={handlePrevMall}>
+            ‹
+          </button>
+          <div className="shopping-mall-container">
+            {shoppingMallImages.slice(shoppingMallIndex, shoppingMallIndex + 3).map((image, index) => (
+              <img
+                key={image.id}
+                src={image.imageUrl}
+                alt={`Shopping Mall ${shoppingMallIndex + index + 1}`}
+                className="shopping-mall-image"
+              />
+            ))}
+            {/* 3개 미만일 때 앞쪽 이미지들 보여주기 */}
+            {shoppingMallIndex + 3 > shoppingMallImages.length && 
+              shoppingMallImages.slice(0, (shoppingMallIndex + 3) - shoppingMallImages.length).map((image, index) => (
+                <img
+                  key={`wrap-${image.id}`}
+                  src={image.imageUrl}
+                  alt={`Shopping Mall ${index + 1}`}
+                  className="shopping-mall-image"
+                />
+              ))
+            }
+          </div>
+          <button className="slider-arrow right" onClick={handleNextMall}>
+            ›
+          </button>
         </div>
       </div>
     </div>
