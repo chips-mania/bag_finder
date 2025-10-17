@@ -1,0 +1,49 @@
+[쇼핑몰 사이트 이동]
+
+바탕 검정색 박스 위 각 쇼핑몰 사진(투명도 70)
+
+29CM
+감도 깊은 취향 셀렉트샵
+
+무신사
+패션의 모든 것, 다 무신사랑 해 !
+
+크림
+KICK THE RULES, LEAD THE TREND
+
+지그재그
+나를 표현하는 쇼핑, 지그재그
+
+더블유컨셉
+나만의컨셉, 감각적 스타일링
+
+=================================================
+[올해의 컬러 가방 추천]
+
+1.
+Mocha Mousse 같은 크기의 검정색 박스 위 해당 사진(투명도 55)
+
+PANTONE
+Mocha Mousse
+Color of the Year 2025: Thoughtful Indulgence
+
+(#9e7863) 정사각형 색상 박스
+17-1230
+
+2. 
+FLORAL_PATHWAYS 같은 크기의 검정색 박스 위 해당 사진(투명도 70)
+
+PANTON COLOR PALETTE
+FLORAL PATHWAYS
+은은한 향을 품은 다채로운 플로럴 톤이 부드러운 모카와 그윽한 버드나무 그린과 어우러져,
+고즈넉한 돌길로 우리를 안내합니다.
+
+FLORAL_PATHWAYS_1은 원본 그대로 사용함.
+
+색상코드
+
+(#8da065) 16-0123 Tendril
+(#7b91cc) 16-4031 Cornflower Blue
+(#a492bc) 16-3815 Viola
+(#c99c95) 16-1511 Rose Tan
+(#9d7860) 17-1239 Mocha Mousse

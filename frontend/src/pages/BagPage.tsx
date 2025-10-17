@@ -248,8 +248,22 @@ const BagPage: React.FC<BagPageProps> = ({
       "다크브라운": "#5c4033",
       "다크블루": "#092ca6",
       "다크베이지": "#9f8c76",
-      "라이트그린": "#90EE90"
-    };
+      "라이트브라운": "#bb7438",
+      "라이트그레이": "#d9d9d7",
+      "라이트그린": "#8bc503",
+      "브릭": "#af4942",
+      "오트밀": "#e0dcc8",
+      "머스타드": "#e1ad01",
+      "라벤더": "#ce8cf8",
+      "라이트핑크": "#ffb6c1",
+      "피치": "#f6b092",
+      "올리브그린": "#7a863d",
+      "라이트옐로우": "#ffffc5",
+      "딥레드": "#991515",
+      "다크핑크": "#aa336a",
+      "로즈골드": "#b76e79",
+      "라이트오렌지": "#fdaa48"
+  };
     
     const normalizedColor = colorName.trim().replace(/['"\[\]]/g, '');
     return colorMap[normalizedColor] || '#CCCCCC'; // 기본값은 회색
@@ -606,7 +620,7 @@ const BagPage: React.FC<BagPageProps> = ({
                       >
                         <div className="color-circle" style={{
                           backgroundColor: selectedColorGroups.has(group.id) ? group.color : 'transparent',
-                          border: `1px solid ${group.color}`
+                          border: `2px solid ${group.color}`
                         }}></div>
                         <span className="color-name">{group.name}</span>
                       </button>

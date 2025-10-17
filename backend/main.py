@@ -453,47 +453,61 @@ async def search_bags(body: SearchRequest):
         # 5. CLIP 임베딩 생성
         query_embedding = get_image_embedding(final_img)
         
-        # 6. Supabase에서 유사도 검색 (unique bag_id 15개 확보까지 반복)
-        unique_bags = {}
-        limit = 15
-        max_retries = 5
-        
-        for attempt in range(max_retries):
-            response = supabase_client.table("image_embeddings") \
-                .select("bag_id, embed") \
-                .limit(limit) \
-                .execute()
+        # 6. Supabase 벡터 검색으로 유사도 검색 (전체 데이터 대상)
+        try:
+            # 벡터 검색 함수 호출
+            response = supabase_client.rpc('match_embeddings', {
+                'query_embedding': query_embedding,
+                'match_threshold': 0.1,  # 유사도 임계값 (0.1 = 10%)
+                'match_count': 50        # 상위 50개 반환
+            }).execute()
             
             if not response.data:
-                break
+                raise Exception("No similar items found")
             
-            # 코사인 유사도 계산 (Python)
+            # 결과를 딕셔너리로 변환
+            unique_bags = {}
             for row in response.data:
-                bag_id = row["bag_id"]
-                embed = row["embed"]
-                
-                # 이미 있으면 스킵
-                if bag_id in unique_bags:
-                    continue
-                
-                # embed가 문자열이면 JSON 파싱
-                if isinstance(embed, str):
-                    import json
-                    embed = json.loads(embed)
-                
-                # 코사인 유사도 계산 (리스트 → float 변환)
-                query_vec = np.array(query_embedding, dtype=np.float32)
-                db_vec = np.array(embed, dtype=np.float32)
-                similarity = np.dot(query_vec, db_vec) / (np.linalg.norm(query_vec) * np.linalg.norm(db_vec))
-                
+                bag_id = row['bag_id']
+                similarity = row['similarity']
                 unique_bags[bag_id] = float(similarity)
+                
+        except Exception as e:
+            logger.warning(f"Vector search failed, falling back to Python calculation: {e}")
+            # 벡터 검색 실패 시 기존 방식으로 폴백
+            unique_bags = {}
+            limit = 1000
+            max_retries = 3
             
-            # unique bag_id가 15개 이상이면 종료
-            if len(unique_bags) >= 15:
-                break
-            
-            # 다음 시도에서 더 많이 가져오기
-            limit += 20
+            for attempt in range(max_retries):
+                response = supabase_client.table("image_embeddings") \
+                    .select("bag_id, embed") \
+                    .range(attempt * limit, (attempt + 1) * limit - 1) \
+                    .execute()
+                
+                if not response.data:
+                    break
+                
+                # 코사인 유사도 계산 (Python)
+                for row in response.data:
+                    bag_id = row["bag_id"]
+                    embed = row["embed"]
+                    
+                    if bag_id in unique_bags:
+                        continue
+                    
+                    if isinstance(embed, str):
+                        import json
+                        embed = json.loads(embed)
+                    
+                    query_vec = np.array(query_embedding, dtype=np.float32)
+                    db_vec = np.array(embed, dtype=np.float32)
+                    similarity = np.dot(query_vec, db_vec) / (np.linalg.norm(query_vec) * np.linalg.norm(db_vec))
+                    
+                    unique_bags[bag_id] = float(similarity)
+                
+                if len(unique_bags) >= 50:
+                    break
         
         # 7. 유사도 기준 정렬 (내림차순)
         sorted_bags = sorted(unique_bags.items(), key=lambda x: x[1], reverse=True)
