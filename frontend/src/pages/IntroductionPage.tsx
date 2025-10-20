@@ -18,11 +18,36 @@ const IntroductionPage: React.FC = () => {
   ];
 
   const shoppingMallImages = [
-    { id: '1', imageUrl: '/home_imgs/shopping_mall_imgs/29cm.png' },
-    { id: '2', imageUrl: '/home_imgs/shopping_mall_imgs/kream.png' },
-    { id: '3', imageUrl: '/home_imgs/shopping_mall_imgs/musinsa.png' },
-    { id: '4', imageUrl: '/home_imgs/shopping_mall_imgs/wconcept.png' },
-    { id: '5', imageUrl: '/home_imgs/shopping_mall_imgs/zigzag.png' }
+    { 
+      id: '1', 
+      imageUrl: '/home_imgs/shopping_mall_imgs/29cm.png',
+      title: '29CM',
+      description: '감도 깊은 취향 셀렉트샵'
+    },
+    { 
+      id: '2', 
+      imageUrl: '/home_imgs/shopping_mall_imgs/kream.png',
+      title: '크림',
+      description: 'KICK THE RULES, LEAD THE TREND'
+    },
+    { 
+      id: '3', 
+      imageUrl: '/home_imgs/shopping_mall_imgs/musinsa.png',
+      title: '무신사',
+      description: '패션의 모든 것, 다 무신사랑 해 !'
+    },
+    { 
+      id: '4', 
+      imageUrl: '/home_imgs/shopping_mall_imgs/wconcept.png',
+      title: '더블유컨셉',
+      description: '나만의컨셉, 감각적 스타일링'
+    },
+    { 
+      id: '5', 
+      imageUrl: '/home_imgs/shopping_mall_imgs/zigzag.png',
+      title: '지그재그',
+      description: '나를 표현하는 쇼핑, 지그재그'
+    }
   ];
 
   const len = bagImages.length;
@@ -31,7 +56,7 @@ const IntroductionPage: React.FC = () => {
   useEffect(() => {
     const interval = setInterval(() => {
       setCurrentIndex((prev) => (prev + 1) % len);
-    }, 5000);
+    }, 3000);
     
     return () => clearInterval(interval);
   }, [len]);
@@ -121,30 +146,213 @@ const IntroductionPage: React.FC = () => {
           <button className="slider-arrow left" onClick={handlePrevMall}>
             ‹
           </button>
-          <div className="shopping-mall-container">
-            {shoppingMallImages.slice(shoppingMallIndex, shoppingMallIndex + 3).map((image, index) => (
-              <img
-                key={image.id}
-                src={image.imageUrl}
-                alt={`Shopping Mall ${shoppingMallIndex + index + 1}`}
-                className="shopping-mall-image"
-              />
-            ))}
-            {/* 3개 미만일 때 앞쪽 이미지들 보여주기 */}
-            {shoppingMallIndex + 3 > shoppingMallImages.length && 
-              shoppingMallImages.slice(0, (shoppingMallIndex + 3) - shoppingMallImages.length).map((image, index) => (
-                <img
-                  key={`wrap-${image.id}`}
-                  src={image.imageUrl}
-                  alt={`Shopping Mall ${index + 1}`}
-                  className="shopping-mall-image"
-                />
-              ))
-            }
-          </div>
+            <div className="shopping-mall-container">
+              {shoppingMallImages.slice(shoppingMallIndex, shoppingMallIndex + 3).map((image, index) => (
+                <div key={image.id} className="shopping-mall-item">
+                  <img
+                    src={image.imageUrl}
+                    alt={`Shopping Mall ${shoppingMallIndex + index + 1}`}
+                    className="shopping-mall-image"
+                  />
+                  <div className="shopping-mall-overlay">
+                    <h3 className="shopping-mall-title">{image.title}</h3>
+                    <p className="shopping-mall-description">{image.description}</p>
+                  </div>
+                </div>
+              ))}
+              {/* 3개 미만일 때 앞쪽 이미지들 보여주기 */}
+              {shoppingMallIndex + 3 > shoppingMallImages.length && 
+                shoppingMallImages.slice(0, (shoppingMallIndex + 3) - shoppingMallImages.length).map((image, index) => (
+                  <div key={`wrap-${image.id}`} className="shopping-mall-item">
+                    <img
+                      src={image.imageUrl}
+                      alt={`Shopping Mall ${index + 1}`}
+                      className="shopping-mall-image"
+                    />
+                    <div className="shopping-mall-overlay">
+                      <h3 className="shopping-mall-title">{image.title}</h3>
+                      <p className="shopping-mall-description">{image.description}</p>
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
           <button className="slider-arrow right" onClick={handleNextMall}>
             ›
           </button>
+        </div>
+      </div>
+      
+      {/* 올해의 컬러 섹션 */}
+      <div className="color-of-year-section">
+        <div className="color-of-year-content">
+          <h2 className="color-of-year-title">2025 올해의 컬러, 이 가방은 어떠신가요?</h2>
+          
+          <div className="color-showcase">
+            <div className="color-image-container">
+              <img 
+                src="/home_imgs/color_of_the_year/Mocha_Mousse.png" 
+                alt="Mocha Mousse Color of the Year 2025"
+                className="color-image"
+              />
+              <div className="color-text-overlay">
+                <div className="pantone-text">PANTONE</div>
+                <div className="color-name">Mocha Mousse</div>
+                <div className="color-description">Color of the Year 2025: Thoughtful Indulgence</div>
+                <div className="color-box" style={{ backgroundColor: '#9e7863' }}></div>
+              </div>
+            </div>
+            
+            <div className="color-bags-section">
+              <div className="intro-bag-card">
+                <img 
+                  src="/boston_bag/1.jpg" 
+                  alt="Boston Bag 1"
+                  className="intro-bag-image"
+                />
+                <div className="intro-bag-info">
+                  <div className="intro-bag-brand">Coach</div>
+                  <div className="intro-bag-name">Leather Shoulder Bag</div>
+                  <div className="intro-bag-price">₩120,000</div>
+                </div>
+              </div>
+              
+              <div className="intro-bag-card">
+                <img 
+                  src="/boston_bag/2.jpg" 
+                  alt="Boston Bag 2"
+                  className="intro-bag-image"
+                />
+                <div className="intro-bag-info">
+                  <div className="intro-bag-brand">Nike</div>
+                  <div className="intro-bag-name">Backpack Pro</div>
+                  <div className="intro-bag-price">₩89,000</div>
+                </div>
+              </div>
+              
+              <div className="intro-bag-card">
+                <img 
+                  src="/boston_bag/3.jpg" 
+                  alt="Boston Bag 3"
+                  className="intro-bag-image"
+                />
+                <div className="intro-bag-info">
+                  <div className="intro-bag-brand">Uniqlo</div>
+                  <div className="intro-bag-name">Canvas Tote</div>
+                  <div className="intro-bag-price">₩29,000</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Pantone Color 영역 */}
+          <div className="pantone-color-section">
+            <div className="pantone-color-left">
+              {/* 컬러 팔레트 */}
+              <div className="pantone-color-palette">
+                <div className="pantone-color-item">
+                  <div className="pantone-color-swatch" style={{ backgroundColor: '#8da065' }}>
+                    <div className="pantone-color-name">Tendril</div>
+                  </div>
+                </div>
+                <div className="pantone-color-item">
+                  <div className="pantone-color-swatch" style={{ backgroundColor: '#7b91cc' }}>
+                    <div className="pantone-color-name">Cornflower Blue</div>
+                  </div>
+                </div>
+                <div className="pantone-color-item">
+                  <div className="pantone-color-swatch" style={{ backgroundColor: '#a492bc' }}>
+                    <div className="pantone-color-name">Viola</div>
+                  </div>
+                </div>
+                <div className="pantone-color-item">
+                  <div className="pantone-color-swatch" style={{ backgroundColor: '#c99c95' }}>
+                    <div className="pantone-color-name">Rose Tan</div>
+                  </div>
+                </div>
+                <div className="pantone-color-item">
+                  <div className="pantone-color-swatch" style={{ backgroundColor: '#9d7860' }}>
+                    <div className="pantone-color-name">Mocha Mousse</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="pantone-bag-cards">
+                <div className="pantone-bag-card">
+                  <img 
+                    src="/boston_bag/1.jpg" 
+                    alt="Boston Bag 1"
+                    className="pantone-bag-image"
+                  />
+                  <div className="pantone-bag-info">
+                    <div className="pantone-bag-brand">Coach</div>
+                    <div className="pantone-bag-name">Leather Shoulder</div>
+                    <div className="pantone-bag-price">₩120,000</div>
+                  </div>
+                </div>
+                
+                <div className="pantone-bag-card">
+                  <img 
+                    src="/boston_bag/2.jpg" 
+                    alt="Boston Bag 2"
+                    className="pantone-bag-image"
+                  />
+                  <div className="pantone-bag-info">
+                    <div className="pantone-bag-brand">Nike</div>
+                    <div className="pantone-bag-name">Sport Waist</div>
+                    <div className="pantone-bag-price">₩45,000</div>
+                  </div>
+                </div>
+                
+                <div className="pantone-bag-card">
+                  <img 
+                    src="/boston_bag/3.jpg" 
+                    alt="Boston Bag 3"
+                    className="pantone-bag-image"
+                  />
+                  <div className="pantone-bag-info">
+                    <div className="pantone-bag-brand">Fossil</div>
+                    <div className="pantone-bag-name">Cross Body</div>
+                    <div className="pantone-bag-price">₩75,000</div>
+                  </div>
+                </div>
+                
+                <div className="pantone-bag-card">
+                  <img 
+                    src="/boston_bag/4.jpg" 
+                    alt="Boston Bag 4"
+                    className="pantone-bag-image"
+                  />
+                  <div className="pantone-bag-info">
+                    <div className="pantone-bag-brand">Patagonia</div>
+                    <div className="pantone-bag-name">Eco Canvas</div>
+                    <div className="pantone-bag-price">₩65,000</div>
+                  </div>
+                </div>
+                
+                <div className="pantone-bag-card">
+                  <img 
+                    src="/boston_bag/5.jpg" 
+                    alt="Boston Bag 5"
+                    className="pantone-bag-image"
+                  />
+                  <div className="pantone-bag-info">
+                    <div className="pantone-bag-brand">Adidas</div>
+                    <div className="pantone-bag-name">Boston Sport</div>
+                    <div className="pantone-bag-price">₩85,000</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="pantone-color-right">
+              <img 
+                src="/home_imgs/color_of_the_year/floral.png" 
+                alt="Floral Design"
+                className="pantone-floral-image"
+              />
+            </div>
+          </div>
         </div>
       </div>
     </div>

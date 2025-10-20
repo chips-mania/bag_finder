@@ -151,6 +151,14 @@
   gap: 2rem;
 }
 
+.shopping-mall-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 240px;
+}
+
 .shopping-mall-image {
   height: 240px;
   width: auto;
@@ -162,6 +170,36 @@
 
 .shopping-mall-image:hover {
   opacity: 1;
+}
+
+.shopping-mall-overlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(to top, rgba(0, 0, 0, 0.9), rgba(0, 0, 0, 0.6), transparent);
+  color: white;
+  padding: 20px 15px 15px 15px;
+  /* border-radius: 0 0 4px 4px; */
+  max-width: 100%;
+  z-index: 5;
+  opacity: 0.8;
+}
+
+.shopping-mall-title {
+  font-size: 16px;
+  font-weight: 550;
+  margin: 0 0 8px 0;
+  line-height: 1.2;
+  font-family: 'Inter', sans-serif;
+}
+
+.shopping-mall-description {
+  font-size: 13px;
+  margin: 0;
+  line-height: 1.3;
+  opacity: 1;
+  font-family: 'Inter', sans-serif;
 }
 
 .slider-arrow {
@@ -199,4 +237,352 @@
 
 .slider-arrow.right {
   right: 2rem;
+}
+
+/* 올해의 컬러 섹션 */
+.color-of-year-section {
+  width: 100%;
+  height: 740px;
+  background: #f8f9fa;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  padding: 6rem 2rem 2rem 5rem;
+  box-sizing: border-box;
+  font-family: 'Inter', sans-serif;
+}
+
+.color-of-year-content {
+  width: 100%;
+  height: 100%;
+  position: relative;
+}
+
+.color-of-year-title {
+  font-size: 1.6rem;
+  font-weight: 520;
+  color: #4b4b4b;
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.2;
+  position: relative;
+  display: inline-block;
+}
+
+.color-of-year-title::after {
+  content: '';
+  position: absolute;
+  right: -60rem;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 930px;
+  height: 1px;
+  background-color: #ccc;
+}
+
+/* 컬러 쇼케이스 */
+.color-showcase {
+  /* position: relative; */
+  margin-top: 1rem;
+  width: 100%;
+  height: 100%;
+  max-height: 270px;
+  display: flex;
+  /* gap: 2rem; */
+}
+
+.color-image-container {
+  position: relative;
+  height: 100%;
+  width: auto;
+  z-index: 1;
+  background-color: #000000;
+  flex-shrink: 0;
+}
+
+.color-image {
+  height: 100%;
+  width: auto;
+  object-fit: contain;
+  /* border-radius: 8px; */
+  /* background-color: #000000; */
+  opacity: 0.55;
+}
+
+.color-text-overlay {
+  position: absolute;
+  top: 60px;
+  left: 20px;
+  color: white;
+  /* text-shadow: 0 2px 4px rgba(0, 0, 0, 0.8); */
+  z-index: 3;
+  font-family: 'Inter', sans-serif;
+}
+
+.color-text-overlay .pantone-text {
+  font-size: 0.7rem;
+  font-weight: 500;
+  letter-spacing: 2px;
+  margin-bottom: 2px;
+  opacity: 0.9;
+  font-family: 'Inter', sans-serif;
+}
+
+.color-text-overlay .color-name {
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 15px;
+  line-height: 1.1;
+  opacity: 0.85;
+  font-family: 'Inter', sans-serif;
+}
+
+.color-text-overlay .color-description {
+  font-size: 1rem;
+  font-weight: 300;
+  opacity: 0.8;
+  line-height: 1.3;
+  margin-bottom: 25px;
+  font-family: 'Inter', sans-serif;
+}
+
+.color-box {
+  position: static;
+  width: 70px;
+  height: 70px;
+  /* border-radius: 8px; */
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: 2px solid rgb(206, 206, 206);
+  margin-top: 15px;
+}
+
+/* 컬러 가방 섹션 */
+.color-bags-section {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 20px;
+  justify-content: space-between;
+  margin-left: 20px;
+}
+
+/* 가방 카드 영역 */
+.bag-cards-area {
+  display: flex;
+  gap: 0.75rem;
+  height: 100%;
+  width: 680px;
+  margin-top: 0rem;
+  position: relative;
+  margin-left: 30px;
+}
+
+.intro-bag-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  /* border-radius: 8px; */
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  min-height: 210px;
+  max-width: calc(33.333% - 0.67rem);
+}
+
+.intro-bag-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.intro-bag-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.intro-bag-info {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.intro-bag-brand {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #666;
+  font-family: 'Inter', sans-serif;
+}
+
+.intro-bag-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.2;
+}
+
+.intro-bag-price {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #e74c3c;
+  font-family: 'Inter', sans-serif;
+}
+
+/* Pantone Color 섹션 */
+.pantone-color-section {
+  width: 100%;
+  background: #f8f9fa;
+  margin-top: 2rem;
+  display: flex;
+  min-height: 200px;
+}
+
+.pantone-color-left {
+  flex: 6;
+  /* padding: 2rem; */
+  padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  position: relative;
+}
+
+.pantone-color-left::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 915px;
+  height: 1px;
+  background-color: #ccc;
+  opacity: 0.5;
+}
+
+.pantone-color-right {
+  flex: 5;
+  /* padding: 2rem; */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: white;
+}
+
+.pantone-floral-image {
+  max-width: 100%;
+  max-height: 100%;
+  object-fit: contain;
+  /* border-radius: 8px; */
+}
+
+.pantone-color-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+/* 컬러 팔레트 */
+.pantone-color-palette {
+  display: flex;
+  padding-top: 10px;
+  gap: 0.7rem;
+  /* margin-bottom: 1.5rem; */
+  height: 45px;
+  width: 100%;
+}
+
+.pantone-color-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  height: 100%;
+}
+
+.pantone-color-swatch {
+  width: 100%;
+  height: 35px;
+  border-radius: 1px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  position: relative;
+  display: flex;
+  /* align-items: center; */
+  justify-content: baseline; 
+}
+
+.pantone-color-name {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: rgb(231, 231, 231);
+  /* font-family: 'Cardo', serif; */
+  /* text-align: center; */
+  /* text-shadow: 0 1px 2px rgba(0, 0, 0, 0.7); */
+  z-index: 1;
+  text-align: left;
+  padding-top: 17px;
+  padding-left: 5px;
+  letter-spacing: 0.1px;
+}
+
+/* Pantone 가방 카드들 */
+.pantone-bag-cards {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0rem;
+}
+
+.pantone-bag-card {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: white;
+  /* border-radius: 8px; */
+  overflow: hidden;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  min-height: 210px;
+}
+
+.pantone-bag-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.pantone-bag-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.pantone-bag-info {
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.pantone-bag-brand {
+  font-size: 0.6rem;
+  font-weight: 500;
+  color: #666;
+  font-family: 'Inter', sans-serif;
+}
+
+.pantone-bag-name {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #333;
+  font-family: 'Inter', sans-serif;
+  line-height: 1.2;
+}
+
+.pantone-bag-price {
+  font-size: 0.65rem;
+  font-weight: 700;
+  color: #e74c3c;
+  font-family: 'Inter', sans-serif;
 }
