@@ -37,8 +37,8 @@ const BagPage: React.FC<BagPageProps> = ({
   // 색상 그룹 관련 상태
   const [selectedColorGroups, setSelectedColorGroups] = useState<Set<string>>(new Set());
   
-  // 카테고리 관련 상태
-  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set());
+  // 카테고리 관련 상태 - 기본적으로 모든 카테고리 활성화
+  const [selectedCategories, setSelectedCategories] = useState<Set<string>>(new Set(['숄더백', '토트백', '크로스백', '보스턴백', '클러치', '백팩', '에코/캔버스백', '웨이스트백']));
   
   // 필터 결과 관련 상태
   const [allFilterResults, setAllFilterResults] = useState<BagResult[] | null>(null);

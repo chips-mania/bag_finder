@@ -206,40 +206,40 @@ const IntroductionPage: React.FC = () => {
             <div className="color-bags-section">
               <div className="intro-bag-card">
                 <img 
-                  src="/boston_bag/1.jpg" 
-                  alt="Boston Bag 1"
+                  src="https://img.29cm.co.kr/next-product/2021/11/11/3789f8ae960647749810a37c457538b9_20211111215834.jpg?width=400&format=webp" 
+                  alt="Cone Tote & Shoulder Bag"
                   className="intro-bag-image"
                 />
                 <div className="intro-bag-info">
-                  <div className="intro-bag-brand">Coach</div>
-                  <div className="intro-bag-name">Leather Shoulder Bag</div>
-                  <div className="intro-bag-price">₩120,000</div>
+                  <div className="intro-bag-brand">코운</div>
+                  <div className="intro-bag-name">cone tote & shoulder bag</div>
+                  <div className="intro-bag-price">385,000</div>
                 </div>
               </div>
               
               <div className="intro-bag-card">
                 <img 
-                  src="/boston_bag/2.jpg" 
-                  alt="Boston Bag 2"
+                  src="https://img.29cm.co.kr/item/202506/11f04c3f71cf802789092b5a423f6dea.jpg?width=400&format=webp" 
+                  alt="5PM30 Large Bag Ash Brown"
                   className="intro-bag-image"
                 />
                 <div className="intro-bag-info">
-                  <div className="intro-bag-brand">Nike</div>
-                  <div className="intro-bag-name">Backpack Pro</div>
-                  <div className="intro-bag-price">₩89,000</div>
+                  <div className="intro-bag-brand">닐링</div>
+                  <div className="intro-bag-name">5PM30 Large Bag</div>
+                  <div className="intro-bag-price">165,000</div>
                 </div>
               </div>
               
               <div className="intro-bag-card">
                 <img 
-                  src="/boston_bag/3.jpg" 
-                  alt="Boston Bag 3"
+                  src="https://img.29cm.co.kr/item/202403/11eeed9b0bc41ebf88b1b3a0120bae54.jpg?width=400&format=webp" 
+                  alt="Marron Bag Brown"
                   className="intro-bag-image"
                 />
                 <div className="intro-bag-info">
-                  <div className="intro-bag-brand">Uniqlo</div>
-                  <div className="intro-bag-name">Canvas Tote</div>
-                  <div className="intro-bag-price">₩29,000</div>
+                  <div className="intro-bag-brand">에클라</div>
+                  <div className="intro-bag-name">Marron bag</div>
+                  <div className="intro-bag-price">248,000</div>
                 </div>
               </div>
             </div>
@@ -280,66 +280,66 @@ const IntroductionPage: React.FC = () => {
               <div className="pantone-bag-cards">
                 <div className="pantone-bag-card">
                   <img 
-                    src="/boston_bag/1.jpg" 
-                    alt="Boston Bag 1"
+                    src="https://img.29cm.co.kr/next-product/2021/05/13/c7a4bde937d34b098027aa0fc46ad7f7_20210513005755.jpg?width=400&format=webp" 
+                    alt="Croissant Medium Shoulder Bag"
                     className="pantone-bag-image"
                   />
                   <div className="pantone-bag-info">
-                    <div className="pantone-bag-brand">Coach</div>
-                    <div className="pantone-bag-name">Leather Shoulder</div>
-                    <div className="pantone-bag-price">₩120,000</div>
+                    <div className="pantone-bag-brand">아코크</div>
+                    <div className="pantone-bag-name">Croissant Medium Shoulder Bag</div>
+                    <div className="pantone-bag-price">73,000</div>
                   </div>
                 </div>
                 
                 <div className="pantone-bag-card">
                   <img 
-                    src="/boston_bag/2.jpg" 
-                    alt="Boston Bag 2"
+                    src="https://img.29cm.co.kr/item/202403/11eeea6fede066f49367813ca6320428.jpg?width=400&format=webp" 
+                    alt="에덴 유광 짐색"
                     className="pantone-bag-image"
                   />
                   <div className="pantone-bag-info">
-                    <div className="pantone-bag-brand">Nike</div>
-                    <div className="pantone-bag-name">Sport Waist</div>
-                    <div className="pantone-bag-price">₩45,000</div>
+                    <div className="pantone-bag-brand">오아이오아이 컬렉션</div>
+                    <div className="pantone-bag-name">에덴 유광 짐색</div>
+                    <div className="pantone-bag-price">198,000</div>
                   </div>
                 </div>
                 
                 <div className="pantone-bag-card">
                   <img 
-                    src="/boston_bag/3.jpg" 
-                    alt="Boston Bag 3"
+                    src="https://img.29cm.co.kr/next-product/2023/04/25/d064185a952345af85fc8b2f660283c1_20230425163018.jpg?width=400&format=webp" 
+                    alt="SNOOKI PURPLE"
                     className="pantone-bag-image"
                   />
                   <div className="pantone-bag-info">
-                    <div className="pantone-bag-brand">Fossil</div>
-                    <div className="pantone-bag-name">Cross Body</div>
-                    <div className="pantone-bag-price">₩75,000</div>
+                    <div className="pantone-bag-brand">엘더블유엘엘</div>
+                    <div className="pantone-bag-name">SNOOKI PURPLE</div>
+                    <div className="pantone-bag-price">188,000</div>
                   </div>
                 </div>
                 
                 <div className="pantone-bag-card">
                   <img 
-                    src="/boston_bag/4.jpg" 
-                    alt="Boston Bag 4"
+                    src="https://img.29cm.co.kr/item/202505/11f03ac2e14bc12397759d6133683be6.jpg?width=400&format=webp" 
+                    alt="시에라 플랩숄더백"
                     className="pantone-bag-image"
                   />
                   <div className="pantone-bag-info">
-                    <div className="pantone-bag-brand">Patagonia</div>
-                    <div className="pantone-bag-name">Eco Canvas</div>
-                    <div className="pantone-bag-price">₩65,000</div>
+                    <div className="pantone-bag-brand">조이그라슨</div>
+                    <div className="pantone-bag-name">시에라 플랩숄더백</div>
+                    <div className="pantone-bag-price">358,000</div>
                   </div>
                 </div>
                 
                 <div className="pantone-bag-card">
                   <img 
-                    src="/boston_bag/5.jpg" 
-                    alt="Boston Bag 5"
+                    src="https://img.29cm.co.kr/item/202507/11f05e2d75c8f9df890943a71862a464.jpg?width=400&format=webp" 
+                    alt="더블 포켓 스트링 백팩"
                     className="pantone-bag-image"
                   />
                   <div className="pantone-bag-info">
-                    <div className="pantone-bag-brand">Adidas</div>
-                    <div className="pantone-bag-name">Boston Sport</div>
-                    <div className="pantone-bag-price">₩85,000</div>
+                    <div className="pantone-bag-brand">시티브리즈</div>
+                    <div className="pantone-bag-name">더블 포켓 스트링 백팩</div>
+                    <div className="pantone-bag-price">99,000</div>
                   </div>
                 </div>
               </div>
@@ -351,6 +351,15 @@ const IntroductionPage: React.FC = () => {
                 alt="Floral Design"
                 className="pantone-floral-image"
               />
+              <div className="pantone-floral-overlay"></div>
+              <div className="pantone-floral-text">
+                <div className="pantone-title">PANTONE COLOR PALETTE</div>
+                <div className="floral-title">FLORAL PATHWAYS</div>
+                <div className="floral-description">
+                  은은한 향을 품은 다채로운 플로럴 톤이 부드러운 모카와 그윽한 버드나무 그린과 어우러져,
+                  고즈넉한 돌길로 우리를 안내합니다.
+                </div>
+              </div>
             </div>
           </div>
         </div>

@@ -424,9 +424,9 @@
 }
 
 .intro-bag-price {
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  color: #e74c3c;
+  color: #000000;
   font-family: 'Inter', sans-serif;
 }
 
@@ -467,6 +467,7 @@
   align-items: center;
   justify-content: center;
   background: white;
+  position: relative;
 }
 
 .pantone-floral-image {
@@ -474,6 +475,52 @@
   max-height: 100%;
   object-fit: contain;
   /* border-radius: 8px; */
+}
+
+.pantone-floral-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(to right, transparent 0%, transparent 20%, rgba(0, 0, 0, 0.7) 100%);
+  pointer-events: none;
+}
+
+.pantone-floral-text {
+  position: absolute;
+  top: 75%;
+  right: 1.2rem;
+  transform: translateY(-50%);
+  color: white;
+  z-index: 10;
+  max-width: 400px;
+  font-family: 'Inter', sans-serif;
+  text-align: right;
+}
+
+.pantone-floral-text .pantone-title {
+  font-size: 0.8rem;
+  font-weight: 300;
+  letter-spacing: 2px;
+  margin-bottom: 0.5rem;
+  opacity: 0.9;
+}
+
+.pantone-floral-text .floral-title {
+  font-size: 1.6rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  line-height: 1.1;
+  opacity: 0.95;
+}
+
+.pantone-floral-text .floral-description {
+  font-size: 0.7rem;
+  font-weight: 300;
+  line-height: 1.4;
+  opacity: 0.85;
+  letter-spacing: -0.5px;
 }
 
 .pantone-color-title {
@@ -581,8 +628,8 @@
 }
 
 .pantone-bag-price {
-  font-size: 0.65rem;
+  font-size: 0.85rem;
   font-weight: 700;
-  color: #e74c3c;
+  color: #000000;
   font-family: 'Inter', sans-serif;
 }
