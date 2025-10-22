@@ -13,19 +13,19 @@
 ## 2️⃣ 테이블 구조
 
 ### 📘 `public.bags`
-| 컬럼명 | 타입 | 설명 |
-|--------|------|------|
-| `bag_id` | `text` (PK) | 상품 고유번호 |
-| `brand` | `text` | 브랜드명 |
-| `bag_name` | `text` | 상품명 |
-| `price` | `numeric` | 가격 |
-| `material` | `text` | 소재 |
-| `color` | `text` | 색상 |
-| `category` | `text` | 종류 (예: backpack, shoulder 등) |
-| `link` | `text` | 쇼핑몰 상세 페이지 URL |
-| `thumbnail` | `text` | 대표 이미지 URL |
-| `detail` | `text` | 상세 이미지 URL (필요시 JSON 배열 형태로 가능) |
-
+| 컬럼명       | 타입            | 설명                               |
+|-------------|----------------|------------------------------------|
+| `bag_id`    | `text`   (PK)  | 상품 고유번호                        |
+| `brand`     | `text`         | 브랜드명                            |
+| `bag_name`  | `text`         | 상품명                              |
+| `price`     | `numeric`      | 가격                                |
+| `material`  | `text`         | 소재                                |
+| `color`     | `text`         | 색상                                |
+| `category`  | `text`         | 종류 (예: backpack, shoulder 등)     |
+| `link`      | `text`         | 쇼핑몰 상세 페이지 URL                |
+| `thumbnail` | `text`         | 대표 이미지 URL                      |
+| `detail`    | `text`         | 상세 이미지 URL (필요시 JSON 배열 형태로 가능) |
+ 
 ✅ **특징**
 - `link`는 실제 쇼핑몰 상품 페이지 링크.
 - `thumbnail`, `detail`은 외부 이미지 URL 그대로 사용 (Supabase Storage 미사용).
@@ -38,7 +38,6 @@
 |--------|------|------|
 | `bag_id` | `text` (PK, FK → bags.bag_id)` | `bags` 테이블 참조 |
 | `embed` | `vector(512)` | CLIP ViT-B/32 임베딩 (L2 정규화 적용) |
-| `updated_at` | `timestamptz` | 기본값 `now()` |
 
 ✅ **특징**
 - `bag_id` 기반 1:1 매핑.
@@ -62,24 +61,6 @@ with (lists = 200);
 
 ---
 
-## 4️⃣ 데이터 입력 테스트
-```sql
-insert into public.bags
-(bag_id, brand, bag_name, price, material, color, category, link, thumbnail, detail)
-values (
-  'B001', 'Gucci', 'Mini Marmont', 1980000, 'leather', 'black', 'shoulder',
-  'https://shop.com/item/B001',
-  'https://img.shop.com/B001_thumb.jpg',
-  'https://img.shop.com/B001_detail.jpg'
-);
-
-insert into public.image_embeddings
-(bag_id, embed)
-values ('B001', '[0.12, 0.34, 0.56, ...]');
-```
-
----
-
 ## 5️⃣ 정책 및 권한 설정
 | 항목 | 설정값 | 설명 |
 |------|---------|------|
@@ -90,7 +71,7 @@ values ('B001', '[0.12, 0.34, 0.56, ...]');
 
 ---
 
-## 6️⃣ 연결 정보 (환경 변수 예시)
+## 6️⃣ 연결 정보 (.env에 이렇게 저장했음음)
 ```bash
 SUPABASE_DB_URL=postgresql://postgres:<password>@db.<project>.supabase.co:5432/postgres
 SUPABASE_URL=https://<project>.supabase.co

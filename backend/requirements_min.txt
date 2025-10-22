@@ -1,0 +1,15 @@
+fastapi>=0.104,<0.120
+uvicorn>=0.24,<0.35
+
+supabase==2.22.0
+realtime>=2.22,<3
+storage3==2.22.0
+postgrest==2.22.0
+supabase-auth==2.22.0
+supabase-functions==2.22.0
+
+httpx>=0.27,<0.29
+httpcore>=1.0,<2.0
+websockets>=12,<13
+python-dotenv>=1.0.0
+python-multipart>=0.0.6
