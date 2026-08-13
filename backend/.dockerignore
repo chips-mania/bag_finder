@@ -1,0 +1,11 @@
+sessions/
+__pycache__/
+*.pyc
+.venv/
+venv/
+.env
+.env.*
+*.pt
+*.onnx
+.git
+.gitignore

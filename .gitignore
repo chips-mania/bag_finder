@@ -13,6 +13,8 @@ __pycache__/
 Thumbs.db
 .env
 .env.*
+!.env.example
+!frontend/.env.example
 .vscode/
 .idea/
 *.bak
@@ -124,6 +126,14 @@ test_data/
 *.json
 *.parquet
 *.pkl
+
+# Keep frontend / deploy config JSON trackable (needed for Vercel + Vite)
+!frontend/package.json
+!frontend/package-lock.json
+!frontend/tsconfig.json
+!frontend/tsconfig.*.json
+!frontend/vercel.json
+!backend/railway.json
 
 # model weights or large files
 *.pt

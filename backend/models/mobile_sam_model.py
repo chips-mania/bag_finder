@@ -23,13 +23,20 @@ class MobileSAMModel:
         self._load_model()
 
     def _load_model(self) -> None:
-        if not os.path.exists(self.model_path):
-            raise FileNotFoundError(f"Model file not found: {self.model_path}")
         try:
-            self.model = SAM(self.model_path)
-            # Ultralytics 모델은 내부적으로 .predict(device=...)에 장치를 넘기는 걸 권장
-            # (self.model.to(self.device)도 가능하긴 하나 predict에 device 넘기는게 확실)
-            logger.info(f"MobileSAM loaded: {self.model_path} (device={self.device})")
+            # Local path if present; otherwise bare name so Ultralytics auto-downloads
+            # official assets (e.g. mobile_sam.pt) on first startup.
+            weight = self.model_path
+            if not os.path.exists(weight):
+                weight = os.path.basename(weight) or "mobile_sam.pt"
+                logger.info(
+                    "Local weights not found at %s; Ultralytics will download %s",
+                    self.model_path,
+                    weight,
+                )
+            self.model = SAM(weight)
+            # Ultralytics prefers device via predict(...); keep path for logging
+            logger.info(f"MobileSAM loaded: {weight} (device={self.device})")
         except Exception as e:
             logger.exception("Failed to load MobileSAM")
             raise

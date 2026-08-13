@@ -118,7 +118,7 @@ async def lifespan(app: FastAPI):
     logger.info("Starting application...")
 
     try:
-        model_path = os.getenv("MODEL_PATH", "models/mobile_sam.pt")
+        model_path = os.getenv("MODEL_PATH", "mobile_sam.pt")
         mobile_sam_model = MobileSAMModel(model_path)
         logger.info("Mobile SAM model loaded successfully")
 
@@ -150,14 +150,22 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-# CORS
-default_origins = ["http://localhost:5173", "http://127.0.0.1:5173"]
-env_origins = os.getenv("CORS_ORIGINS")  # 콤마 구분
+# CORS: local defaults + FRONTEND_URL + optional CORS_ORIGINS (comma-separated)
+default_origins = [
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+    "http://localhost:3000",
+]
+allow_origins: List[str] = list(default_origins)
+frontend_url = os.getenv("FRONTEND_URL")
+if frontend_url:
+    allow_origins.append(frontend_url.strip())
+env_origins = os.getenv("CORS_ORIGINS")
 if env_origins:
-    allow_origins = [o.strip() for o in env_origins.split(",") if o.strip()]
-else:
-    frontend_url = os.getenv("FRONTEND_URL")
-    allow_origins = [frontend_url] if frontend_url else default_origins
+    allow_origins.extend(o.strip() for o in env_origins.split(",") if o.strip())
+# Preserve order, drop empties/duplicates
+seen: set[str] = set()
+allow_origins = [o for o in allow_origins if o and not (o in seen or seen.add(o))]
 
 app.add_middleware(
     CORSMiddleware,
