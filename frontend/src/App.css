@@ -20,7 +20,7 @@
   position: sticky;
   top: 0;
   z-index: 100;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   display: flex;
   align-items: center;
 }
@@ -59,7 +59,7 @@
   transition: all 0.3s ease;
   position: relative;
   padding: 0.1rem 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   outline: none;
 }
 

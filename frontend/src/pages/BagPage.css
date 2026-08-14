@@ -3,7 +3,7 @@
   width: 90%; /* 추천란 가로 사이즈 */
   /* padding-left: 100px; */
   margin: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
 }
 
 .bag-header {
@@ -68,7 +68,7 @@
   font-size: 1.4rem;
   font-weight: 600;
   color: #333;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
 }
 
 /* results-section 상/하 스크롤 화살표 */
@@ -201,7 +201,7 @@
   background: #fff;
   padding: 4px 12px;
   border-radius: 0;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   font-size: 0.85rem;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease;
@@ -319,7 +319,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
 }
 
 /* 하단 가로 갤러리 (10개) */
@@ -516,7 +516,7 @@
   padding: 12px 40px;
   border-radius: 0;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
@@ -544,7 +544,7 @@
   padding: 12px 40px;
   border-radius: 0;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
@@ -582,7 +582,7 @@
   padding: 12px 40px;
   border-radius: 0;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   font-weight: 500;
   cursor: pointer;
   transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
@@ -655,7 +655,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
 }
 
 /* 필터 컨테이너 */
@@ -679,7 +679,7 @@
   border: 1px solid #ddd;
   border-radius: 0;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   outline: none;
   box-sizing: border-box;
 }
@@ -708,7 +708,7 @@
   font-size: 1rem;
   font-weight: 700;
   color: #333;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
 }
 
 /* 토글 버튼 그룹 */
@@ -727,7 +727,7 @@
   background: white;
   color: #333;
   font-size: 0.75rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   cursor: pointer;
   transition: all 0.2s ease;
   outline: none;
@@ -845,7 +845,7 @@
   padding: 12px 40px;
   border-radius: 0;
   font-size: 1rem;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
   font-weight: 500;
   min-width: 120px; /* 최소 너비 설정 */
   width: 120px; /* 고정 너비 설정 */
@@ -894,7 +894,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
 }
 
 .filter-results-content {
@@ -1045,7 +1045,7 @@
   font-size: 1.2rem;
   font-weight: 600;
   color: #333;
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
 }
 
 .filter-results-content {

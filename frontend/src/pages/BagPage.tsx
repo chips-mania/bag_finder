@@ -5,6 +5,26 @@ import type { SessionResponse, BagResult } from '../services/api';
 import { apiService } from '../services/api';
 import './BagPage.css';
 
+function useSearchingDots(active: boolean, intervalMs = 400): string {
+  const frames = ['...', '..', '.'];
+  const [dots, setDots] = useState(frames[0]);
+
+  useEffect(() => {
+    if (!active) {
+      setDots(frames[0]);
+      return;
+    }
+    let i = 0;
+    const id = window.setInterval(() => {
+      i = (i + 1) % frames.length;
+      setDots(frames[i]);
+    }, intervalMs);
+    return () => window.clearInterval(id);
+  }, [active, intervalMs]);
+
+  return dots;
+}
+
 interface BagPageProps {
   session: SessionResponse | null;
   imageUrl: string;
@@ -46,6 +66,7 @@ const BagPage: React.FC<BagPageProps> = ({
   const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const itemsPerPage = 10; // 페이지당 10개씩 표시
+  const searchDots = useSearchingDots(isSearching || isFilterSearching);
   
   // 하드코딩된 색상 그룹 데이터
   const COLOR_GROUPS = [
@@ -329,7 +350,7 @@ const BagPage: React.FC<BagPageProps> = ({
                   onClick={handleSearch}
                   disabled={isSearching}
                 >
-                  {isSearching ? 'SEARCHING...' : 'SEARCH'}
+                  {isSearching ? `SEARCH${searchDots}` : 'SEARCH'}
                 </button>
                 <button 
                   className="reset-button"
@@ -696,7 +717,7 @@ const BagPage: React.FC<BagPageProps> = ({
                 onClick={handleFilterSearch}
                 disabled={isFilterSearching}
               >
-                {isFilterSearching ? 'SEARCHING...' : 'SEARCH'}
+                {isFilterSearching ? `SEARCH${searchDots}` : 'SEARCH'}
               </button>
               <button 
                 className="filter-reset-button"
@@ -747,7 +768,7 @@ const BagPage: React.FC<BagPageProps> = ({
               </div>
             <div className="filter-results-content">
                 {isFilterSearching ? (
-                  <div className="loading-message">검색 중...</div>
+                  <div className="loading-message">검색 중{searchDots}</div>
                 ) : allFilterResults ? (
                   <>
 
