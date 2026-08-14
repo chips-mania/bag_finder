@@ -49,6 +49,30 @@ class MobileSAMModel:
         arr = np.array(image)  # uint8 HWC
         return arr
 
+    @staticmethod
+    def _normalize_prompts(points, labels) -> Tuple[List[List[float]], List[int]]:
+        """Flatten to [[x, y], ...] and [1, 0, ...]."""
+        pts = points
+        lbs = labels
+        if isinstance(pts, list) and pts:
+            first = pts[0]
+            # [[[x, y], ...]] -> [[x, y], ...]
+            if isinstance(first, (list, tuple)) and first and isinstance(first[0], (list, tuple)):
+                pts = first
+                if isinstance(lbs, list) and lbs and isinstance(lbs[0], (list, tuple)):
+                    lbs = lbs[0]
+        if not isinstance(pts, list) or not pts:
+            raise ValueError("points must be a non-empty list of [x, y]")
+        flat_pts: List[List[float]] = [[float(p[0]), float(p[1])] for p in pts]
+        if isinstance(lbs, list) and lbs and isinstance(lbs[0], (list, tuple)):
+            lbs = lbs[0]
+        if not isinstance(lbs, list):
+            lbs = [int(lbs)] * len(flat_pts)
+        flat_lbs = [int(v) for v in lbs]
+        if len(flat_lbs) != len(flat_pts):
+            raise ValueError(f"points/labels length mismatch: {len(flat_pts)} vs {len(flat_lbs)}")
+        return flat_pts, flat_lbs
+
     def predict_mask(
         self,
         image: Image.Image,
@@ -68,43 +92,22 @@ class MobileSAMModel:
         img_np = self._pil_to_numpy_rgb(image)
 
         try:
-            # Normalize prompt shapes: ensure shape is (1, N, 2) and (1, N)
-            pts_in = points
-            lbs_in = labels
-            try:
-                if isinstance(pts_in, list) and len(pts_in) > 0:
-                    # If first element is a number -> Nx2, wrap to [Nx2]
-                    first = pts_in[0]
-                    if isinstance(first, (list, tuple)) and len(first) == 2 and all(
-                        isinstance(v, (int, float)) for v in first
-                    ):
-                        # Now check if it's 2D (Nx2) not 3D
-                        if not (isinstance(pts_in[0][0], (list, tuple)) and len(pts_in[0][0]) == 2):
-                            pts_in = [pts_in]
-                            lbs_in = [labels] if isinstance(labels, list) and (len(labels) > 0 and not isinstance(labels[0], list)) else labels
-            except Exception:
-                # Fail safe: keep original
-                pass
-
-            if isinstance(lbs_in, list) and len(lbs_in) > 0 and not isinstance(lbs_in[0], (list, tuple)):
-                # Ensure labels nested when points are nested
-                if isinstance(pts_in, list) and len(pts_in) > 0 and isinstance(pts_in[0], list) and len(pts_in[0]) > 0 and isinstance(pts_in[0][0], (list, tuple)):
-                    lbs_in = [lbs_in]
-
-            logger.info("SAM.predict inputs -> points groups: %s, points per group: %s, labels groups: %s",
-                        len(pts_in) if isinstance(pts_in, list) else 'n/a',
-                        len(pts_in[0]) if isinstance(pts_in, list) and len(pts_in) > 0 else 'n/a',
-                        len(lbs_in) if isinstance(lbs_in, list) else 'n/a')
-            # Ultralytics SAM 추론
+            # Ultralytics SAM expects points (N, 2) and labels (N,).
+            # Extra wrapping to (1, N, 2) makes internals 4D vs 3D.
+            pts, lbs = self._normalize_prompts(points, labels)
+            logger.info(
+                "SAM.predict inputs -> n_points=%s labels=%s",
+                len(pts),
+                lbs,
+            )
             results = self.model.predict(
                 source=img_np,
-                points=pts_in,
-                labels=lbs_in,
+                points=pts,
+                labels=lbs,
                 device=self.device,
                 save=False,
                 show=False,
                 verbose=False,
-                # 이미지 크기를 강제하고 싶다면 imgsz=1024 같은 옵션 사용 가능
             )
 
             if not results:
