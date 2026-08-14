@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ErrorMessage from './components/ErrorMessage';
-import { ONBOARDING_STORAGE_KEY } from './components/Onboarding';
+import Onboarding, { ONBOARDING_STORAGE_KEY } from './components/Onboarding';
 import type { SessionResponse } from './services/api';
 import { apiService } from './services/api';
 import './App.css';
@@ -104,9 +104,6 @@ function App() {
             onSessionCreated={handleSessionCreated}
             onError={handleError}
             onReset={handleReset}
-            onboardingOpen={onboardingOpen}
-            onSelectSample={handleSelectSample}
-            onOnboardingFinished={handleOnboardingFinished}
           />
         );
       default:
@@ -147,6 +144,14 @@ function App() {
       <main className="app-main">
         {renderPage()}
       </main>
+
+      <Onboarding
+        open={onboardingOpen}
+        hasSession={!!session}
+        isUploading={isLoading}
+        onSelectSample={handleSelectSample}
+        onFinished={handleOnboardingFinished}
+      />
 
       {error && (
         <ErrorMessage

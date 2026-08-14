@@ -482,18 +482,6 @@
   max-width: var(--upload-w);
 }
 
-.bag-main.onboarding-mode .bag-content {
-  justify-content: flex-start;
-  flex-wrap: nowrap;
-  align-items: stretch;
-}
-
-.bag-main.onboarding-mode .upload-section {
-  flex: 0 0 var(--upload-w);
-  width: var(--upload-w);
-  max-width: var(--upload-w);
-}
-
 .bag-main.preview-mode {
   justify-content: flex-start;
 }
