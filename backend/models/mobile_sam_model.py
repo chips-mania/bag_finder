@@ -162,24 +162,30 @@ class MobileSAMModel:
         pts, lbs = self._normalize_prompts(points, labels)
         orig_h, orig_w = (int(embedding["original_size"][0]), int(embedding["original_size"][1]))
         image_embedding = embedding["image_embedding"]
+        matrix: np.ndarray = embedding["transform_matrix"]
         canvas_h, canvas_w = self.encoder_hw
         scale = float(embedding.get("scale", min(canvas_w / orig_w, canvas_h / orig_h)))
         new_h = int(orig_h * scale + 0.5)
         new_w = int(orig_w * scale + 0.5)
 
-        # SamOnnxModel applies apply_coords inside the graph using orig_im_size.
-        # Points must stay in original image pixels or they get scaled twice (mask shifts down).
         input_points = np.array(pts, dtype=np.float32)
         input_labels = np.array(lbs, dtype=np.float32)
         onnx_coord = np.concatenate([input_points, np.array([[0.0, 0.0]], dtype=np.float32)], axis=0)[None, :, :]
         onnx_label = np.concatenate([input_labels, np.array([-1], dtype=np.float32)], axis=0)[None, :]
+
+        # Same affine as the encoder canvas (top-left letterbox). orig_im_size is the
+        # canvas so the ONNX graph does not scale points a second time, and the mask
+        # comes back at canvas resolution for padding crop.
+        ones = np.ones((1, onnx_coord.shape[1], 1), dtype=np.float32)
+        homog = np.concatenate([onnx_coord, ones], axis=2)
+        onnx_coord = np.matmul(homog, matrix.T)[:, :, :2].astype(np.float32)
 
         names = {i.name: i for i in self.decoder_session.get_inputs()}
         has_mask = np.zeros((1,), dtype=np.float32)
         if "has_mask_input" in names and len(names["has_mask_input"].shape) == 2:
             has_mask = np.zeros((1, 1), dtype=np.float32)
 
-        orig_im_size = np.array([orig_h, orig_w], dtype=np.float32)
+        orig_im_size = np.array([canvas_h, canvas_w], dtype=np.float32)
         decoder_inputs = {
             "image_embeddings": image_embedding,
             "image_embedding": image_embedding,
@@ -192,15 +198,14 @@ class MobileSAMModel:
         feed = {k: v for k, v in decoder_inputs.items() if k in names}
 
         logger.info(
-            "[SAM decode] orig_hw=%s canvas_hw=%s scale=%.6f resized=%s pts_orig=%s labels=%s orig_im_size=%s feed_keys=%s",
+            "[SAM decode] orig_hw=%s canvas_hw=%s scale=%.6f resized=%s pts_orig=%s pts_canvas=%s orig_im_size=%s",
             (orig_h, orig_w),
             (canvas_h, canvas_w),
             scale,
             (new_h, new_w),
             pts,
-            lbs,
+            onnx_coord[:, :-1, :].tolist(),
             orig_im_size.tolist(),
-            list(feed.keys()),
         )
 
         with self._lock:
@@ -211,6 +216,7 @@ class MobileSAMModel:
         by_name = {o.name: v for o, v in zip(self.decoder_session.get_outputs(), raw_outs)}
         masks = by_name.get("masks", raw_outs[0])
         iou_preds = by_name.get("iou_predictions", raw_outs[1] if len(raw_outs) > 1 else None)
+        low_res = by_name.get("low_res_masks")
 
         iou = None
         mask_idx = 0
@@ -221,25 +227,26 @@ class MobileSAMModel:
                 iou = float(iou_arr[mask_idx])
                 logger.info("[SAM decode] iou=%s idx=%s", iou_arr.tolist(), mask_idx)
 
-        m = np.array(masks)
-        if m.ndim == 4:
-            mask = (m[0, min(mask_idx, m.shape[1] - 1)] > 0).astype(np.uint8)
-        elif m.ndim == 3:
-            mask = (m[min(mask_idx, m.shape[0] - 1)] > 0).astype(np.uint8)
-        else:
-            mask = (m > 0).astype(np.uint8)
+        # Prefer 256x256 logits (1/4 of 1024 canvas) so we can crop letterbox padding.
+        source = np.array(low_res if low_res is not None else masks)
+        if source.ndim == 4:
+            source = source[0, min(mask_idx, source.shape[1] - 1)]
+        elif source.ndim == 3:
+            source = source[min(mask_idx, source.shape[0] - 1)]
 
-        mask_bin = self._mask_to_original(mask, orig_h, orig_w, new_h, new_w, canvas_h, canvas_w)
+        mask_bin = self._canvas_mask_to_original(
+            source, orig_h, orig_w, new_h, new_w, canvas_h, canvas_w
+        )
         logger.info(
-            "[SAM decode] mask_raw=%s mask_out=%s foreground=%s",
-            mask.shape,
+            "[SAM decode] source=%s mask_out=%s foreground=%s",
+            tuple(np.array(source).shape),
             mask_bin.shape,
             int(mask_bin.sum()),
         )
         return mask_bin, iou
 
     @staticmethod
-    def _mask_to_original(
+    def _canvas_mask_to_original(
         mask: np.ndarray,
         orig_h: int,
         orig_w: int,
@@ -248,16 +255,22 @@ class MobileSAMModel:
         canvas_h: int,
         canvas_w: int,
     ) -> np.ndarray:
-        if mask.shape == (orig_h, orig_w):
-            return mask
-        if mask.shape == (canvas_h, canvas_w):
-            cropped = mask[:new_h, :new_w]
-            return cv2.resize(cropped, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
-        if mask.shape[0] == mask.shape[1] and mask.shape[0] in (256, 1024):
-            cropped = mask[:new_h, :new_w] if mask.shape[0] == canvas_h else mask
-            return cv2.resize(cropped, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
-        logger.warning("[SAM decode] unexpected mask shape %s, resizing to orig", mask.shape)
-        return cv2.resize(mask, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
+        """Crop top-left letterbox region, then scale back to the original image."""
+        mh, mw = int(mask.shape[0]), int(mask.shape[1])
+        crop_h = max(1, min(mh, int(round(new_h * mh / canvas_h))))
+        crop_w = max(1, min(mw, int(round(new_w * mw / canvas_w))))
+        cropped = mask[:crop_h, :crop_w]
+        logger.info(
+            "[SAM decode] crop %s -> %s (letterbox %sx%s of canvas %sx%s)",
+            (mh, mw),
+            cropped.shape,
+            new_h,
+            new_w,
+            canvas_h,
+            canvas_w,
+        )
+        resized = cv2.resize(cropped.astype(np.float32), (orig_w, orig_h), interpolation=cv2.INTER_LINEAR)
+        return (resized > 0).astype(np.uint8)
 
     def predict_mask(
         self,
