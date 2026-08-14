@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from 'react';
 import ImageUpload from '../components/ImageUpload';
 import ImagePreview from '../components/ImagePreview';
+import Onboarding from '../components/Onboarding';
 import type { SessionResponse, BagResult } from '../services/api';
 import { apiService } from '../services/api';
 import './BagPage.css';
@@ -32,6 +33,9 @@ interface BagPageProps {
   onSessionCreated: (session: SessionResponse, imageUrl: string) => void;
   onError: (errorMessage: string) => void;
   onReset: () => void;
+  onboardingOpen?: boolean;
+  onSelectSample?: (src: string, filename: string) => Promise<void>;
+  onOnboardingFinished?: () => void;
 }
 
 const BagPage: React.FC<BagPageProps> = ({
@@ -40,7 +44,10 @@ const BagPage: React.FC<BagPageProps> = ({
   isLoading,
   onSessionCreated,
   onError,
-  onReset
+  onReset,
+  onboardingOpen = false,
+  onSelectSample,
+  onOnboardingFinished,
 }) => {
   const [showResults, setShowResults] = useState(false);
   const [promptMode, setPromptMode] = useState<'add' | 'remove' | null>('add');
@@ -323,7 +330,7 @@ const BagPage: React.FC<BagPageProps> = ({
       <div className="bag-header">
       </div>
 
-      <main className={`bag-main ${showResults ? 'preview-mode' : 'upload-mode'}`}>
+      <main className={`bag-main ${showResults ? 'preview-mode' : 'upload-mode'}${onboardingOpen ? ' onboarding-mode' : ''}`}>
         <div className="bag-content">
           <div className="upload-section">
             {!session ? (
@@ -392,6 +399,16 @@ const BagPage: React.FC<BagPageProps> = ({
               </div>
             )}
           </div>
+
+          {onboardingOpen && onSelectSample && onOnboardingFinished && (
+            <Onboarding
+              open={onboardingOpen}
+              hasSession={!!session}
+              isUploading={isLoading}
+              onSelectSample={onSelectSample}
+              onFinished={onOnboardingFinished}
+            />
+          )}
 
           {showResults && searchResults && (
             <div className="results-section" style={{ height: `calc(${previewHeight + 90}px - 75px)` }}>

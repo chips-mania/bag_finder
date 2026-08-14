@@ -4,12 +4,12 @@ import './Onboarding.css';
 export const ONBOARDING_STORAGE_KEY = 'stylefinder-onboarding-complete';
 
 const SAMPLE_BAGS = [
-  { src: '/boston_bag/1.jpg', name: 'sample-1.jpg' },
-  { src: '/boston_bag/4.jpg', name: 'sample-4.jpg' },
-  { src: '/boston_bag/7.jpg', name: 'sample-7.jpg' },
-  { src: '/boston_bag/10.jpg', name: 'sample-10.jpg' },
-  { src: '/boston_bag/13.jpg', name: 'sample-13.jpg' },
-  { src: '/boston_bag/16.jpg', name: 'sample-16.jpg' },
+  { src: '/onboarding/1.jpg', name: 'sample-1.jpg' },
+  { src: '/onboarding/2.jpg', name: 'sample-2.jpg' },
+  { src: '/onboarding/3.jpg', name: 'sample-3.jpg' },
+  { src: '/onboarding/4.jpg', name: 'sample-4.jpg' },
+  { src: '/onboarding/5.jpg', name: 'sample-5.jpg' },
+  { src: '/onboarding/6.jpg', name: 'sample-6.jpg' },
 ];
 
 const STEPS = [
@@ -62,7 +62,6 @@ const Onboarding: React.FC<OnboardingProps> = ({
 
   if (!open) return null;
 
-  const isBlocking = step === 0 || step === 3;
   const current = STEPS[step];
 
   const finish = () => {
@@ -107,8 +106,7 @@ const Onboarding: React.FC<OnboardingProps> = ({
     (step === 1 && !hasSession);
 
   return (
-    <div className={`onboarding-layer ${isBlocking ? 'is-blocking' : 'is-pass-through'}`}>
-      <div className="onboarding-box">
+    <div className="onboarding-box">
         <p className="onboarding-kicker">{current.kicker}</p>
         <h2>{current.title}</h2>
         <p>{current.body}</p>
@@ -142,7 +140,6 @@ const Onboarding: React.FC<OnboardingProps> = ({
             {step >= STEPS.length - 1 ? 'Done' : isUploading ? 'Uploading...' : 'Next'}
           </button>
         </div>
-      </div>
     </div>
   );
 };

@@ -1,38 +1,16 @@
-.onboarding-layer {
-  position: fixed;
-  top: var(--nav-h);
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 200;
-  font-family: 'Inter', 'Noto Sans KR', sans-serif;
-}
-
-.onboarding-layer.is-blocking {
-  background: rgba(0, 0, 0, 0.35);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 1.5rem;
-}
-
-.onboarding-layer.is-pass-through {
-  pointer-events: none;
-  background: transparent;
-  display: flex;
-  align-items: flex-end;
-  justify-content: flex-start;
-  padding: 1.5rem 2rem 2rem;
-}
-
 .onboarding-box {
   pointer-events: auto;
   background: #fff;
   border: 1px solid #000;
   border-radius: 0;
-  width: min(520px, 100%);
+  flex: 1 1 auto;
+  min-width: 280px;
+  min-height: var(--dropzone-min-h);
   padding: 1.5rem 1.5rem 1.25rem;
   box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  font-family: 'Inter', 'Noto Sans KR', sans-serif;
 }
 
 .onboarding-kicker {
@@ -61,18 +39,21 @@
 .onboarding-samples {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
+  grid-template-rows: 1fr 1fr;
   gap: 8px;
+  flex: 1 1 auto;
   margin-bottom: 1rem;
+  min-height: 0;
 }
 
 .onboarding-sample {
-  aspect-ratio: 1;
   border: 1px solid #000;
   border-radius: 0;
   padding: 0;
   background: #fff;
   cursor: pointer;
   overflow: hidden;
+  min-height: 0;
 }
 
 .onboarding-sample img {
@@ -95,12 +76,13 @@
 .onboarding-actions {
   display: flex;
   gap: 0;
+  margin-top: auto;
 }
 
 .onboarding-btn {
   flex: 1 1 0;
-  background: #fff;
-  color: #000;
+  background: #000;
+  color: #fff;
   border: 1px solid #000;
   border-radius: 0;
   padding: 12px 16px;
@@ -117,13 +99,14 @@
 }
 
 .onboarding-btn:hover:not(:disabled) {
-  background: #000;
-  color: #fff;
+  background: #fff;
+  color: #000;
 }
 
 .onboarding-btn:disabled {
-  color: #999;
+  background: #999;
   border-color: #999;
+  color: #fff;
   cursor: not-allowed;
 }
 
@@ -137,7 +120,7 @@
     grid-template-columns: repeat(2, 1fr);
   }
 
-  .onboarding-layer.is-pass-through {
-    padding: 1rem;
+  .onboarding-box {
+    min-height: 420px;
   }
 }
