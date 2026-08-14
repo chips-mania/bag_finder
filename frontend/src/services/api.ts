@@ -1,7 +1,14 @@
 import axios from 'axios';
 
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL?.replace(/\/$/, '') || 'http://127.0.0.1:8000';
+function resolveApiBaseUrl(): string {
+  const raw = import.meta.env.VITE_API_URL?.trim();
+  if (!raw) return 'http://127.0.0.1:8000';
+  const withoutSlash = raw.replace(/\/$/, '');
+  if (/^https?:\/\//i.test(withoutSlash)) return withoutSlash;
+  return `https://${withoutSlash}`;
+}
+
+const API_BASE_URL = resolveApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
