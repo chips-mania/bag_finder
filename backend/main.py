@@ -478,6 +478,8 @@ async def search_bags(body: SearchRequest):
         
         # 5. CLIP 임베딩 생성
         query_embedding = get_image_embedding(final_img)
+        sess["clip_embedding"] = query_embedding
+        sess["clip_mask_path"] = mask_path
         
         # 6. Supabase 벡터 검색으로 유사도 검색 (전체 데이터 대상)
         try:
