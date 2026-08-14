@@ -79,14 +79,18 @@ class MobileSAMModel:
         neww = int(oldw * scale + 0.5)
         return newh, neww
 
-    def _preprocess_nchw(self, rgb: np.ndarray) -> np.ndarray:
+    def _letterbox_rgb(self, rgb: np.ndarray) -> np.ndarray:
+        """Resize longest side to target_size and pad to a square (no stretching)."""
         h, w = rgb.shape[:2]
         new_h, new_w = self.get_preprocess_shape(h, w, self.target_size)
         im = cv2.resize(rgb, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-        x = (im.astype(np.float32) - PIXEL_MEAN) / PIXEL_STD
-        pad_h = self.target_size - new_h
-        pad_w = self.target_size - new_w
-        x = np.pad(x, ((0, pad_h), (0, pad_w), (0, 0)))
+        canvas = np.zeros((self.target_size, self.target_size, 3), dtype=np.uint8)
+        canvas[:new_h, :new_w] = im
+        return canvas
+
+    def _preprocess_nchw(self, rgb: np.ndarray) -> np.ndarray:
+        letter = self._letterbox_rgb(rgb).astype(np.float32)
+        x = (letter - PIXEL_MEAN) / PIXEL_STD
         return x.transpose(2, 0, 1)[None].astype(np.float32)
 
     def encode_image(self, image: Image.Image) -> Dict[str, Any]:
@@ -94,15 +98,14 @@ class MobileSAMModel:
             raise RuntimeError("Model not loaded")
         rgb = np.array(image.convert("RGB"))
         h, w = rgb.shape[:2]
-        tensor = self._preprocess_nchw(rgb)
         inp = self.encoder_session.get_inputs()[0]
         shape = list(inp.shape)
+        letter = self._letterbox_rgb(rgb)
         if len(shape) == 3 or (len(shape) == 4 and shape[-1] == 3):
-            hwc = cv2.resize(rgb, (self.target_size, self.target_size), interpolation=cv2.INTER_LINEAR)
-            arr = hwc.astype(np.float32)
+            arr = letter.astype(np.float32)
             feed = {self.encoder_input_name: np.expand_dims(arr, 0) if len(shape) == 4 else arr}
         else:
-            feed = {self.encoder_input_name: tensor}
+            feed = {self.encoder_input_name: self._preprocess_nchw(rgb)}
         with self._lock:
             embedding = self.encoder_session.run(None, feed)[0]
         logger.info("SAM encoder done: image=%sx%s embedding=%s", w, h, getattr(embedding, "shape", None))
@@ -137,15 +140,20 @@ class MobileSAMModel:
         onnx_label = np.concatenate([input_labels, np.array([-1], dtype=np.float32)], axis=0)[None, :]
         onnx_coord = self.apply_coords(onnx_coord, original_size)
 
+        names = {i.name: i for i in self.decoder_session.get_inputs()}
+        has_mask = np.zeros(1, dtype=np.float32)
+        has_shape = names.get("has_mask_input")
+        if has_shape is not None and len(has_shape.shape) == 2:
+            has_mask = np.zeros((1, 1), dtype=np.float32)
         decoder_inputs = {
             "image_embeddings": image_embedding,
+            "image_embedding": image_embedding,
             "point_coords": onnx_coord.astype(np.float32),
             "point_labels": onnx_label.astype(np.float32),
             "mask_input": np.zeros((1, 1, 256, 256), dtype=np.float32),
-            "has_mask_input": np.zeros(1, dtype=np.float32),
+            "has_mask_input": has_mask,
             "orig_im_size": np.array(original_size, dtype=np.float32),
         }
-        names = {i.name for i in self.decoder_session.get_inputs()}
         feed = {k: v for k, v in decoder_inputs.items() if k in names}
         with self._lock:
             masks, iou_preds, *_rest = self.decoder_session.run(None, feed)

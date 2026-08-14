@@ -65,42 +65,41 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
     };
   }, [imageUrl, onHeightChange]);
 
-  const handleImageClick = async (event: React.MouseEvent<HTMLImageElement>) => {
+    const handleImageClick = async (event: React.MouseEvent<HTMLImageElement>) => {
     if (isPredicting || !imageUrl) return;
 
-    const rect = event.currentTarget.getBoundingClientRect();
+    const img = event.currentTarget;
+    const rect = img.getBoundingClientRect();
     const x = event.clientX - rect.left;
     const y = event.clientY - rect.top;
 
-    // ✅ 정확한 좌표 변환 (preserveAspectRatio 고려)
     const serverW = session.image_info.width;
     const serverH = session.image_info.height;
-    
-    // 이미지의 실제 표시 영역 계산 (object-fit: contain 고려)
-    const imageAspect = serverW / serverH;
+    const natW = img.naturalWidth || serverW;
+    const natH = img.naturalHeight || serverH;
+    const imageAspect = natW / natH;
     const containerAspect = rect.width / rect.height;
-    
+
     let displayWidth, displayHeight, offsetX, offsetY;
-    
+
     if (imageAspect > containerAspect) {
-      // 이미지가 컨테이너보다 넓음 (좌우 여백)
       displayWidth = rect.width;
       displayHeight = rect.width / imageAspect;
       offsetX = 0;
       offsetY = (rect.height - displayHeight) / 2;
     } else {
-      // 이미지가 컨테이너보다 높음 (상하 여백)
       displayHeight = rect.height;
       displayWidth = rect.height * imageAspect;
       offsetX = (rect.width - displayWidth) / 2;
       offsetY = 0;
     }
-    
-    // 클릭 좌표를 실제 이미지 영역으로 변환
+
     const relativeX = (x - offsetX) / displayWidth;
     const relativeY = (y - offsetY) / displayHeight;
-    
-    // 서버 좌표로 변환 (유효성 검사 포함)
+    if (relativeX < 0 || relativeX > 1 || relativeY < 0 || relativeY > 1) {
+      return;
+    }
+
     const imageX = Math.max(0, Math.min(serverW, relativeX * serverW));
     const imageY = Math.max(0, Math.min(serverH, relativeY * serverH));
 
@@ -151,7 +150,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
             className="preview-image"
             onClick={handleImageClick}
             ref={imgRef}
-            style={{ cursor: isPredicting ? 'wait' : 'crosshair', display: 'block', width: '100%', height: 'auto' }}
+            style={{ cursor: isPredicting ? 'wait' : 'crosshair' }}
           />
         )}
 
