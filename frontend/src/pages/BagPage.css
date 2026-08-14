@@ -506,42 +506,16 @@
   gap: 0;
   background: transparent;
   justify-content: center;
+  align-items: stretch;
   width: 100%;
 }
 
-.search-button {
-  background: #000000;
-  color: white;
-  border: 1px solid #000000;
-  padding: 12px 40px;
-  border-radius: 0;
-  font-size: 1rem;
-  font-family: 'Inter', 'Noto Sans KR', sans-serif;
-  font-weight: 500;
-  cursor: pointer;
-  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease;
-  flex: 1 1 0;
-  outline: none;
-  appearance: none;
-  -webkit-tap-highlight-color: transparent;
-}
-
-.search-button:hover {
-  background: white;
-  color: #000000;
-  border: 1px solid #000000;
-}
-.search-button:focus,
-.search-button:focus-visible {
-  outline: none;
-  border-color: #000000 !important;
-}
-
+.search-button,
 .reset-button {
   background: #000000;
   color: white;
   border: 1px solid #000000;
-  padding: 12px 40px;
+  padding: 0 40px;
   border-radius: 0;
   font-size: 1rem;
   font-family: 'Inter', 'Noto Sans KR', sans-serif;
@@ -552,15 +526,22 @@
   outline: none;
   appearance: none;
   -webkit-tap-highlight-color: transparent;
+  box-sizing: border-box;
   height: 45px;
-
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
+.search-button:hover,
 .reset-button:hover {
   background: white;
   color: #000000;
   border: 1px solid #000000;
 }
+
+.search-button:focus,
+.search-button:focus-visible,
 .reset-button:focus,
 .reset-button:focus-visible {
   outline: none;
