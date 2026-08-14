@@ -111,6 +111,8 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
       container: { width: rect.width, height: rect.height },
       display: { width: displayWidth, height: displayHeight, offsetX, offsetY },
       relative: { x: relativeX, y: relativeY },
+      natural: { width: natW, height: natH },
+      serverInfo: { width: serverW, height: serverH },
       server: { x: imageX, y: imageY },
       promptMode,
       label,
@@ -154,7 +156,7 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
           />
         )}
 
-        {contours.length > 0 && serverSize && imageUrl && (
+        {imageUrl && (
           <svg
             className="contour-overlay"
             style={{
@@ -166,15 +168,14 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
               pointerEvents: 'none',
               zIndex: 1,
             }}
-            viewBox={`0 0 ${serverSize.width} ${serverSize.height}`}
-            preserveAspectRatio="xMidYMid meet"   // img 스케일과 일치
+            viewBox={`0 0 ${serverSize?.width ?? session.image_info.width} ${serverSize?.height ?? session.image_info.height}`}
+            preserveAspectRatio="xMidYMid meet"
           >
             {contours.map((contour, i) => {
-              // polygon은 자동으로 닫히므로 그대로 사용
               const pointsAttr = contour.map(([x, y]) => `${x},${y}`).join(' ');
               return (
                 <polygon
-                  key={i}
+                  key={`c-${i}`}
                   points={pointsAttr}
                   fill="#FAE100"
                   fillOpacity={0.25}
@@ -188,6 +189,17 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
                 />
               );
             })}
+            {points.map(([px, py], i) => (
+              <circle
+                key={`p-${i}`}
+                cx={px}
+                cy={py}
+                r={6}
+                fill={labels[i] === 0 ? '#ff4d4f' : '#1677ff'}
+                stroke="#fff"
+                strokeWidth={2}
+              />
+            ))}
           </svg>
         )}
 

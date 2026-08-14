@@ -27,6 +27,8 @@ class MobileSAMModel:
         self.model_path = model_path
         self.device = device
         self.target_size = 1024
+        self.encoder_hw = (1024, 1024)  # (H, W)
+        self.encoder_layout = "nchw"  # nchw | hwc
         self._lock = threading.Lock()
         self.encoder_session: Optional[ort.InferenceSession] = None
         self.decoder_session: Optional[ort.InferenceSession] = None
@@ -42,12 +44,38 @@ class MobileSAMModel:
         so.intra_op_num_threads = int(os.getenv("ORT_INTRA_OP_THREADS", "4"))
         self.encoder_session = ort.InferenceSession(encoder_path, sess_options=so, providers=providers)
         self.decoder_session = ort.InferenceSession(decoder_path, sess_options=so, providers=providers)
-        self.encoder_input_name = self.encoder_session.get_inputs()[0].name
         enc_in = self.encoder_session.get_inputs()[0]
-        dec_ins = [(i.name, i.shape) for i in self.decoder_session.get_inputs()]
-        logger.info("MobileSAM ONNX encoder input: %s %s", enc_in.name, enc_in.shape)
-        logger.info("MobileSAM ONNX decoder inputs: %s", dec_ins)
-        logger.info("MobileSAM ONNX loaded (device=%s providers=%s)", self.device, providers)
+        self.encoder_input_name = enc_in.name
+        self.encoder_hw, self.encoder_layout = self._infer_encoder_spec(enc_in.shape)
+        dec_ins = [(i.name, list(i.shape), i.type) for i in self.decoder_session.get_inputs()]
+        dec_outs = [(o.name, list(o.shape)) for o in self.decoder_session.get_outputs()]
+        logger.info(
+            "[SAM] encoder file=%s input=%s shape=%s layout=%s canvas_hw=%s",
+            encoder_path,
+            enc_in.name,
+            list(enc_in.shape),
+            self.encoder_layout,
+            self.encoder_hw,
+        )
+        logger.info("[SAM] decoder inputs=%s outputs=%s", dec_ins, dec_outs)
+        logger.info("[SAM] providers=%s", providers)
+
+    @staticmethod
+    def _infer_encoder_spec(shape) -> Tuple[Tuple[int, int], str]:
+        dims = [d if isinstance(d, int) and d > 0 else None for d in shape]
+        if len(dims) == 4 and dims[-1] == 3:
+            h = dims[1] or 1024
+            w = dims[2] or 1024
+            return (h, w), "hwc"
+        if len(dims) == 4:
+            h = dims[2] or 1024
+            w = dims[3] or 1024
+            return (h, w), "nchw"
+        if len(dims) == 3 and dims[-1] == 3:
+            return (dims[0] or 1024, dims[1] or 1024), "hwc"
+        if len(dims) == 3:
+            return (dims[1] or 1024, dims[2] or 1024), "nchw"
+        return (1024, 1024), "nchw"
 
     def _ensure_onnx_files(self) -> Tuple[str, str]:
         cache_dir = Path(os.getenv("MODEL_DIR", "models")) / "mobile_sam_onnx"
@@ -57,7 +85,7 @@ class MobileSAMModel:
         if encoder and decoder:
             return str(encoder), str(decoder)
 
-        logger.info("Downloading MobileSAM ONNX from Hugging Face (%s)", HF_ZIP)
+        logger.info("[SAM] downloading ONNX zip %s", HF_ZIP)
         zip_path = hf_hub_download(repo_id=HF_REPO, filename=HF_ZIP)
         with zipfile.ZipFile(zip_path) as zf:
             zf.extractall(cache_dir)
@@ -72,55 +100,56 @@ class MobileSAMModel:
         matches = sorted(root.rglob(f"*{kind}*.onnx"))
         return matches[0] if matches else None
 
-    @staticmethod
-    def get_preprocess_shape(oldh: int, oldw: int, long_side_length: int) -> Tuple[int, int]:
-        scale = long_side_length * 1.0 / max(oldh, oldw)
-        newh = int(oldh * scale + 0.5)
-        neww = int(oldw * scale + 0.5)
-        return newh, neww
-
-    def _letterbox_rgb(self, rgb: np.ndarray) -> np.ndarray:
-        """Resize longest side to target_size and pad to a square (no stretching)."""
-        h, w = rgb.shape[:2]
-        new_h, new_w = self.get_preprocess_shape(h, w, self.target_size)
-        im = cv2.resize(rgb, (new_w, new_h), interpolation=cv2.INTER_LINEAR)
-        canvas = np.zeros((self.target_size, self.target_size, 3), dtype=np.uint8)
-        canvas[:new_h, :new_w] = im
-        return canvas
-
-    def _preprocess_nchw(self, rgb: np.ndarray) -> np.ndarray:
-        letter = self._letterbox_rgb(rgb).astype(np.float32)
-        x = (letter - PIXEL_MEAN) / PIXEL_STD
-        return x.transpose(2, 0, 1)[None].astype(np.float32)
+    def _warp_to_encoder(self, rgb: np.ndarray) -> Tuple[np.ndarray, np.ndarray, float]:
+        """Uniform scale (no stretch) onto encoder canvas. Returns canvas RGB, 3x3 matrix, scale."""
+        orig_h, orig_w = rgb.shape[:2]
+        canvas_h, canvas_w = self.encoder_hw
+        scale = min(canvas_w / orig_w, canvas_h / orig_h)
+        matrix = np.array([[scale, 0.0, 0.0], [0.0, scale, 0.0], [0.0, 0.0, 1.0]], dtype=np.float32)
+        canvas = cv2.warpAffine(
+            rgb,
+            matrix[:2],
+            (canvas_w, canvas_h),
+            flags=cv2.INTER_LINEAR,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=(0, 0, 0),
+        )
+        return canvas, matrix, float(scale)
 
     def encode_image(self, image: Image.Image) -> Dict[str, Any]:
         if self.encoder_session is None:
             raise RuntimeError("Model not loaded")
         rgb = np.array(image.convert("RGB"))
-        h, w = rgb.shape[:2]
-        inp = self.encoder_session.get_inputs()[0]
-        shape = list(inp.shape)
-        letter = self._letterbox_rgb(rgb)
-        if len(shape) == 3 or (len(shape) == 4 and shape[-1] == 3):
-            arr = letter.astype(np.float32)
-            feed = {self.encoder_input_name: np.expand_dims(arr, 0) if len(shape) == 4 else arr}
+        orig_h, orig_w = rgb.shape[:2]
+        canvas, matrix, scale = self._warp_to_encoder(rgb)
+
+        if self.encoder_layout == "hwc":
+            # samexporter: warped image as float32; BGR matches cv2.imread exports
+            hwc = cv2.cvtColor(canvas, cv2.COLOR_RGB2BGR).astype(np.float32)
+            feed_arr = hwc if len(self.encoder_session.get_inputs()[0].shape) == 3 else np.expand_dims(hwc, 0)
         else:
-            feed = {self.encoder_input_name: self._preprocess_nchw(rgb)}
+            x = (canvas.astype(np.float32) - PIXEL_MEAN) / PIXEL_STD
+            feed_arr = x.transpose(2, 0, 1)[None].astype(np.float32)
+
+        feed = {self.encoder_input_name: feed_arr}
         with self._lock:
             embedding = self.encoder_session.run(None, feed)[0]
-        logger.info("SAM encoder done: image=%sx%s embedding=%s", w, h, getattr(embedding, "shape", None))
+
+        logger.info(
+            "[SAM encode] orig_hw=%s canvas_hw=%s scale=%.6f layout=%s feed=%s embed=%s",
+            (orig_h, orig_w),
+            self.encoder_hw,
+            scale,
+            self.encoder_layout,
+            tuple(feed_arr.shape),
+            tuple(embedding.shape),
+        )
         return {
             "image_embedding": embedding,
-            "original_size": (h, w),
+            "original_size": (orig_h, orig_w),
+            "transform_matrix": matrix,
+            "scale": scale,
         }
-
-    def apply_coords(self, coords: np.ndarray, original_size: Tuple[int, int]) -> np.ndarray:
-        old_h, old_w = original_size
-        new_h, new_w = self.get_preprocess_shape(old_h, old_w, self.target_size)
-        coords = deepcopy(coords).astype(np.float32)
-        coords[..., 0] *= new_w / old_w
-        coords[..., 1] *= new_h / old_h
-        return coords
 
     def predict_from_embedding(
         self,
@@ -131,53 +160,96 @@ class MobileSAMModel:
         if self.decoder_session is None:
             raise RuntimeError("Model not loaded")
         pts, lbs = self._normalize_prompts(points, labels)
-        original_size = tuple(embedding["original_size"])
+        orig_h, orig_w = (int(embedding["original_size"][0]), int(embedding["original_size"][1]))
         image_embedding = embedding["image_embedding"]
+        matrix: np.ndarray = embedding["transform_matrix"]
+        scale = float(embedding.get("scale", matrix[0, 0]))
+        canvas_h, canvas_w = self.encoder_hw
 
         input_points = np.array(pts, dtype=np.float32)
         input_labels = np.array(lbs, dtype=np.float32)
         onnx_coord = np.concatenate([input_points, np.array([[0.0, 0.0]], dtype=np.float32)], axis=0)[None, :, :]
         onnx_label = np.concatenate([input_labels, np.array([-1], dtype=np.float32)], axis=0)[None, :]
-        onnx_coord = self.apply_coords(onnx_coord, original_size)
+
+        ones = np.ones((1, onnx_coord.shape[1], 1), dtype=np.float32)
+        homog = np.concatenate([onnx_coord, ones], axis=2)
+        onnx_coord = np.matmul(homog, matrix.T)[:, :, :2].astype(np.float32)
 
         names = {i.name: i for i in self.decoder_session.get_inputs()}
-        has_mask = np.zeros(1, dtype=np.float32)
-        has_shape = names.get("has_mask_input")
-        if has_shape is not None and len(has_shape.shape) == 2:
+        has_mask = np.zeros((1,), dtype=np.float32)
+        if "has_mask_input" in names and len(names["has_mask_input"].shape) == 2:
             has_mask = np.zeros((1, 1), dtype=np.float32)
+
+        # Decoder generates a mask on the encoder canvas, then we warp back.
+        orig_im_size = np.array([canvas_h, canvas_w], dtype=np.float32)
         decoder_inputs = {
             "image_embeddings": image_embedding,
             "image_embedding": image_embedding,
-            "point_coords": onnx_coord.astype(np.float32),
+            "point_coords": onnx_coord,
             "point_labels": onnx_label.astype(np.float32),
             "mask_input": np.zeros((1, 1, 256, 256), dtype=np.float32),
             "has_mask_input": has_mask,
-            "orig_im_size": np.array(original_size, dtype=np.float32),
+            "orig_im_size": orig_im_size,
         }
         feed = {k: v for k, v in decoder_inputs.items() if k in names}
-        with self._lock:
-            masks, iou_preds, *_rest = self.decoder_session.run(None, feed)
 
-        # masks: (1, K, H, W) logits
+        logger.info(
+            "[SAM decode] orig_hw=%s canvas_hw=%s scale=%.6f pts_orig=%s pts_canvas=%s labels=%s orig_im_size=%s feed_keys=%s",
+            (orig_h, orig_w),
+            (canvas_h, canvas_w),
+            scale,
+            pts,
+            onnx_coord[:, :-1, :].tolist(),
+            lbs,
+            orig_im_size.tolist(),
+            list(feed.keys()),
+        )
+
+        with self._lock:
+            raw_outs = self.decoder_session.run(None, feed)
+        out_meta = [(o.name, tuple(np.array(v).shape)) for o, v in zip(self.decoder_session.get_outputs(), raw_outs)]
+        logger.info("[SAM decode] raw outputs=%s", out_meta)
+
+        by_name = {o.name: v for o, v in zip(self.decoder_session.get_outputs(), raw_outs)}
+        masks = by_name.get("masks", raw_outs[0])
+        iou_preds = by_name.get("iou_predictions", raw_outs[1] if len(raw_outs) > 1 else None)
+
         iou = None
         mask_idx = 0
-        try:
+        if iou_preds is not None:
             iou_arr = np.array(iou_preds).reshape(-1)
-            mask_idx = int(np.argmax(iou_arr))
-            iou = float(iou_arr[mask_idx])
-        except Exception:
-            pass
+            if iou_arr.size:
+                mask_idx = int(np.argmax(iou_arr))
+                iou = float(iou_arr[mask_idx])
+                logger.info("[SAM decode] iou=%s idx=%s", iou_arr.tolist(), mask_idx)
+
         m = np.array(masks)
         if m.ndim == 4:
-            mask_bin = (m[0, mask_idx] > 0).astype(np.uint8)
+            mask_canvas = (m[0, min(mask_idx, m.shape[1] - 1)] > 0).astype(np.uint8)
         elif m.ndim == 3:
-            mask_bin = (m[0] > 0).astype(np.uint8)
+            mask_canvas = (m[min(mask_idx, m.shape[0] - 1)] > 0).astype(np.uint8)
         else:
-            mask_bin = (m > 0).astype(np.uint8)
+            mask_canvas = (m > 0).astype(np.uint8)
 
-        orig_h, orig_w = int(original_size[0]), int(original_size[1])
-        if mask_bin.shape != (orig_h, orig_w):
-            mask_bin = cv2.resize(mask_bin, (orig_w, orig_h), interpolation=cv2.INTER_NEAREST)
+        if mask_canvas.shape != (canvas_h, canvas_w):
+            logger.info("[SAM decode] resize mask %s -> canvas %s", mask_canvas.shape, (canvas_h, canvas_w))
+            mask_canvas = cv2.resize(mask_canvas, (canvas_w, canvas_h), interpolation=cv2.INTER_NEAREST)
+
+        inv = np.linalg.inv(matrix)
+        mask_bin = cv2.warpAffine(
+            mask_canvas,
+            inv[:2],
+            (orig_w, orig_h),
+            flags=cv2.INTER_NEAREST,
+            borderMode=cv2.BORDER_CONSTANT,
+            borderValue=0,
+        )
+        logger.info(
+            "[SAM decode] mask_canvas=%s mask_out=%s foreground=%s",
+            mask_canvas.shape,
+            mask_bin.shape,
+            int(mask_bin.sum()),
+        )
         return mask_bin, iou
 
     def predict_mask(

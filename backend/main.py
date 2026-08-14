@@ -327,9 +327,17 @@ async def predict_mask(body: PredictBody):
 
     try:
         embedding = sess.get("sam_embedding")
-        if embedding is None:
+        if embedding is None or embedding.get("transform_matrix") is None:
             embedding = mobile_sam_model.encode_image(img)
             sess["sam_embedding"] = embedding
+        logger.info(
+            "/predict session=%s img=%sx%s points=%s labels=%s",
+            body.session_id,
+            img.width,
+            img.height,
+            body.points,
+            body.labels,
+        )
         mask_bin, iou = mobile_sam_model.predict_mask(
             image=img,
             points=body.points,
