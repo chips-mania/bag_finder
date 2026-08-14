@@ -134,6 +134,7 @@ test_data/
 !frontend/tsconfig.*.json
 !frontend/vercel.json
 !backend/railway.json
+!railway.json
 
 # model weights or large files
 *.pt
