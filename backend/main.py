@@ -159,7 +159,7 @@ default_origins = [
 allow_origins: List[str] = list(default_origins)
 frontend_url = os.getenv("FRONTEND_URL")
 if frontend_url:
-    allow_origins.append(frontend_url.strip())
+    allow_origins.append(frontend_url.strip().strip("\"'"))
 env_origins = os.getenv("CORS_ORIGINS")
 if env_origins:
     allow_origins.extend(o.strip() for o in env_origins.split(",") if o.strip())
@@ -170,8 +170,9 @@ allow_origins = [o for o in allow_origins if o and not (o in seen or seen.add(o)
 app.add_middleware(
     CORSMiddleware,
     allow_origins=allow_origins,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
