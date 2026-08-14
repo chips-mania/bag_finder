@@ -105,6 +105,7 @@ class MobileSAMModel:
                 points=pts,
                 labels=lbs,
                 device=self.device,
+                imgsz=int(os.getenv("SAM_IMGSZ", "512")),
                 save=False,
                 show=False,
                 verbose=False,

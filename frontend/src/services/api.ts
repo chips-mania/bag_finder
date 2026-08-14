@@ -12,7 +12,7 @@ const API_BASE_URL = resolveApiBaseUrl();
 
 const api = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 30000, // 30초 타임아웃
+  timeout: 120000,
 });
 
 // 요청 인터셉터
@@ -149,6 +149,7 @@ export const apiService = {
       headers: {
         'Content-Type': 'application/json',
       },
+      timeout: 180000,
     });
     return response.data;
   },
