@@ -112,7 +112,9 @@ export const apiService = {
     const formData = new FormData();
     formData.append('file', file);
     
-    const response = await api.post<SessionResponse>('/session', formData);
+    const response = await api.post<SessionResponse>('/session', formData, {
+      timeout: 180000,
+    });
     return response.data;
   },
 

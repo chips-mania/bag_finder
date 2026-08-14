@@ -120,7 +120,7 @@ async def lifespan(app: FastAPI):
     try:
         model_path = os.getenv("MODEL_PATH", "mobile_sam.pt")
         mobile_sam_model = MobileSAMModel(model_path)
-        logger.info("Mobile SAM model loaded successfully")
+        logger.info("Mobile SAM ONNX model loaded successfully")
 
         ttl_minutes = int(os.getenv("SESSION_TTL_MINUTES", "10"))
         session_cache = SessionCache(ttl_minutes)
@@ -257,6 +257,8 @@ async def create_session(file: UploadFile = File(...)):
         img_path = SESS_DIR / f"{session_id}.png"
         img.save(img_path)
 
+        embedding = mobile_sam_model.encode_image(img)
+
         # 동일 session_id로 저장(※ predict에서 찾기 위해)
         session_cache.create_session({
             "image_path": str(img_path),
@@ -264,6 +266,9 @@ async def create_session(file: UploadFile = File(...)):
             "height": info["height"],
             "format": info["format"],
         }, session_id=session_id)
+        sess = session_cache.get_session(session_id)
+        if sess is not None:
+            sess["sam_embedding"] = embedding
 
         logger.info("Session created successfully: %s", session_id)
 
@@ -321,12 +326,16 @@ async def predict_mask(body: PredictBody):
         raise HTTPException(status_code=500, detail=f"Failed to open image: {e}")
 
     try:
-        # SAM 추론 (반환 마스크는 입력 이미지 크기와 동일하도록 보장)
+        embedding = sess.get("sam_embedding")
+        if embedding is None:
+            embedding = mobile_sam_model.encode_image(img)
+            sess["sam_embedding"] = embedding
         mask_bin, iou = mobile_sam_model.predict_mask(
             image=img,
             points=body.points,
             labels=body.labels,
             multimask_output=False,
+            embedding=embedding,
         )
 
         # ✅ AnyLabeling 스타일 컨투어 추출 & 단순화
