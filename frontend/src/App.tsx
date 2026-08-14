@@ -1,25 +1,34 @@
-import React, { useState } from 'react';
-import ImageUpload from './components/ImageUpload';
-import ImagePreview from './components/ImagePreview';
+import React, { useEffect, useState } from 'react';
 import ErrorMessage from './components/ErrorMessage';
+import Onboarding, { ONBOARDING_STORAGE_KEY } from './components/Onboarding';
 import type { SessionResponse } from './services/api';
+import { apiService } from './services/api';
 import './App.css';
 
 // Page components
 import IntroductionPage from './pages/IntroductionPage';
 import BagPage from './pages/BagPage';
-import ShoesPage from './pages/ShoesPage';
-import HeadwearPage from './pages/HeadwearPage';
-import AccessoryPage from './pages/AccessoryPage';
 
-type Page = 'introduction' | 'bag' | 'shoes' | 'headwear' | 'accessory';
+type Page = 'introduction' | 'bag';
+
+function readOnboardingComplete(): boolean {
+  try {
+    return localStorage.getItem(ONBOARDING_STORAGE_KEY) === '1';
+  } catch {
+    return false;
+  }
+}
 
 function App() {
-  const [currentPage, setCurrentPage] = useState<Page>('introduction');
+  const [currentPage, setCurrentPage] = useState<Page>(() =>
+    readOnboardingComplete() ? 'introduction' : 'bag'
+  );
   const [session, setSession] = useState<SessionResponse | null>(null);
   const [imageUrl, setImageUrl] = useState<string>('');
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string>('');
+  const [onboardingComplete, setOnboardingComplete] = useState(readOnboardingComplete);
+  const [onboardingOpen, setOnboardingOpen] = useState(() => !readOnboardingComplete());
 
   const handleSessionCreated = (newSession: SessionResponse, imageUrl: string) => {
     setSession(newSession);
@@ -41,6 +50,47 @@ function App() {
     setError('');
   };
 
+  useEffect(() => {
+    if (onboardingOpen) {
+      setCurrentPage('bag');
+    }
+  }, [onboardingOpen]);
+
+  const handleOnboardingFinished = () => {
+    try {
+      localStorage.setItem(ONBOARDING_STORAGE_KEY, '1');
+    } catch {
+      // ignore storage failures
+    }
+    setOnboardingComplete(true);
+    setOnboardingOpen(false);
+  };
+
+  const handleSelectSample = async (src: string, filename: string) => {
+    setIsLoading(true);
+    setError('');
+    try {
+      const response = await fetch(src);
+      if (!response.ok) {
+        throw new Error('샘플 이미지를 불러오지 못했습니다.');
+      }
+      const blob = await response.blob();
+      const file = new File([blob], filename, { type: blob.type || 'image/jpeg' });
+      const newSession = await apiService.createSession(file);
+      const url = URL.createObjectURL(blob);
+      handleSessionCreated(newSession, url);
+    } catch (err: unknown) {
+      const msg =
+        (err as { response?: { data?: { detail?: string } } })?.response?.data?.detail ??
+        (err as Error).message ??
+        '샘플 이미지 업로드 중 오류가 발생했습니다.';
+      setError(msg);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const renderPage = () => {
     switch (currentPage) {
       case 'introduction':
@@ -56,12 +106,6 @@ function App() {
             onReset={handleReset}
           />
         );
-      case 'shoes':
-        return <ShoesPage />;
-      case 'headwear':
-        return <HeadwearPage />;
-      case 'accessory':
-        return <AccessoryPage />;
       default:
         return <IntroductionPage />;
     }
@@ -77,7 +121,7 @@ function App() {
               className={`nav-main-item ${currentPage === 'introduction' ? 'active' : ''}`}
               onClick={() => setCurrentPage('introduction')}
             >
-              FINDER
+              HOME
             </button>
             <button 
               className={`nav-main-item ${currentPage === 'bag' ? 'active' : ''}`}
@@ -85,24 +129,14 @@ function App() {
             >
               BAG
             </button>
-            <button 
-              className={`nav-main-item ${currentPage === 'shoes' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('shoes')}
-            >
-              SHOES
-            </button>
-            <button 
-              className={`nav-main-item ${currentPage === 'headwear' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('headwear')}
-            >
-              HEADWEAR
-            </button>
-            <button 
-              className={`nav-main-item ${currentPage === 'accessory' ? 'active' : ''}`}
-              onClick={() => setCurrentPage('accessory')}
-            >
-              ACCESSORY
-            </button>
+            {onboardingComplete && (
+              <button
+                className={`nav-main-item ${onboardingOpen ? 'active' : ''}`}
+                onClick={() => setOnboardingOpen(true)}
+              >
+                GUIDE
+              </button>
+            )}
           </div>
         </div>
       </nav>
@@ -110,6 +144,14 @@ function App() {
       <main className="app-main">
         {renderPage()}
       </main>
+
+      <Onboarding
+        open={onboardingOpen}
+        hasSession={!!session}
+        isUploading={isLoading}
+        onSelectSample={handleSelectSample}
+        onFinished={handleOnboardingFinished}
+      />
 
       {error && (
         <ErrorMessage
