@@ -4,12 +4,9 @@ import './Onboarding.css';
 export const ONBOARDING_STORAGE_KEY = 'stylefinder-onboarding-complete';
 
 const SAMPLE_BAGS = [
-  { src: '/boston_bag/1.jpg', name: 'sample-1.jpg' },
-  { src: '/boston_bag/4.jpg', name: 'sample-4.jpg' },
-  { src: '/boston_bag/7.jpg', name: 'sample-7.jpg' },
-  { src: '/boston_bag/10.jpg', name: 'sample-10.jpg' },
-  { src: '/boston_bag/13.jpg', name: 'sample-13.jpg' },
-  { src: '/boston_bag/16.jpg', name: 'sample-16.jpg' },
+  { src: '/onboarding/1.jpg', name: 'sample-1.jpg' },
+  { src: '/onboarding/2.jpg', name: 'sample-2.jpg' },
+  { src: '/onboarding/3.jpg', name: 'sample-3.jpg' },
 ];
 
 const STEPS = [

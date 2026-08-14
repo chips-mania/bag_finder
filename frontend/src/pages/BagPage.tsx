@@ -6,7 +6,7 @@ import { apiService } from '../services/api';
 import './BagPage.css';
 
 function useSearchingDots(active: boolean, intervalMs = 400): string {
-  const frames = ['...', '..', '.'];
+  const frames = ['.', '..', '...'];
   const [dots, setDots] = useState(frames[0]);
 
   useEffect(() => {
@@ -350,7 +350,7 @@ const BagPage: React.FC<BagPageProps> = ({
                   onClick={handleSearch}
                   disabled={isSearching}
                 >
-                  {isSearching ? `SEARCH${searchDots}` : 'SEARCH'}
+                  {isSearching ? `SEARCHING${searchDots}` : 'SEARCH'}
                 </button>
                 <button 
                   className="reset-button"
@@ -717,7 +717,7 @@ const BagPage: React.FC<BagPageProps> = ({
                 onClick={handleFilterSearch}
                 disabled={isFilterSearching}
               >
-                {isFilterSearching ? `SEARCH${searchDots}` : 'SEARCH'}
+                {isFilterSearching ? `SEARCHING${searchDots}` : 'SEARCH'}
               </button>
               <button 
                 className="filter-reset-button"
