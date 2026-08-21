@@ -1,0 +1,94 @@
+{
+  "label": "after_onnx",
+  "api": "https://bagfinder-production.up.railway.app",
+  "image": "_bench_assets\\3.jpg",
+  "runs": 5,
+  "sam": {
+    "session_client_ms_avg": 1345.49,
+    "predict_client_ms_avg": 533.06,
+    "total_client_ms_avg": 1878.55,
+    "runs": [
+      {
+        "session_client_ms": 1311.3,
+        "session_server_encode_ms": 500.78,
+        "predict_client_ms": 591.3,
+        "predict_server": {
+          "encode": 0.0,
+          "decode": 88.51,
+          "total": 88.66
+        },
+        "total_client_ms": 1902.6
+      },
+      {
+        "session_client_ms": 1423.17,
+        "session_server_encode_ms": 531.69,
+        "predict_client_ms": 551.26,
+        "predict_server": {
+          "encode": 0.0,
+          "decode": 84.08,
+          "total": 84.24
+        },
+        "total_client_ms": 1974.43
+      },
+      {
+        "session_client_ms": 1311.08,
+        "session_server_encode_ms": 473.71,
+        "predict_client_ms": 501.0,
+        "predict_server": {
+          "encode": 0.0,
+          "decode": 81.34,
+          "total": 81.48
+        },
+        "total_client_ms": 1812.08
+      },
+      {
+        "session_client_ms": 1283.82,
+        "session_server_encode_ms": 461.22,
+        "predict_client_ms": 511.5,
+        "predict_server": {
+          "encode": 0.0,
+          "decode": 75.47,
+          "total": 75.57
+        },
+        "total_client_ms": 1795.31
+      },
+      {
+        "session_client_ms": 1398.1,
+        "session_server_encode_ms": 474.73,
+        "predict_client_ms": 510.22,
+        "predict_server": {
+          "encode": 0.0,
+          "decode": 71.77,
+          "total": 71.88
+        },
+        "total_client_ms": 1908.32
+      }
+    ]
+  },
+  "filter": {
+    "client_ms_avg": 1181.78,
+    "setup_search_client_ms": 25390.12,
+    "runs": [
+      {
+        "client_ms": 952.13,
+        "result_count": 10
+      },
+      {
+        "client_ms": 1053.89,
+        "result_count": 10
+      },
+      {
+        "client_ms": 1304.41,
+        "result_count": 10
+      },
+      {
+        "client_ms": 1472.64,
+        "result_count": 10
+      },
+      {
+        "client_ms": 1125.83,
+        "result_count": 10
+      }
+    ]
+  }
+}

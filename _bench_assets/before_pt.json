@@ -1,0 +1,74 @@
+{
+  "label": "before_pt",
+  "api": "https://bagfinder-production.up.railway.app",
+  "image": "_bench_assets\\3.jpg",
+  "runs": 5,
+  "sam": {
+    "session_client_ms_avg": 945.05,
+    "predict_client_ms_avg": 33215.38,
+    "total_client_ms_avg": 34160.42,
+    "runs": [
+      {
+        "session_client_ms": 815.81,
+        "session_server_encode_ms": null,
+        "predict_client_ms": 33284.67,
+        "predict_server": null,
+        "total_client_ms": 34100.48
+      },
+      {
+        "session_client_ms": 1102.19,
+        "session_server_encode_ms": null,
+        "predict_client_ms": 33860.34,
+        "predict_server": null,
+        "total_client_ms": 34962.53
+      },
+      {
+        "session_client_ms": 912.16,
+        "session_server_encode_ms": null,
+        "predict_client_ms": 33604.17,
+        "predict_server": null,
+        "total_client_ms": 34516.33
+      },
+      {
+        "session_client_ms": 1035.17,
+        "session_server_encode_ms": null,
+        "predict_client_ms": 32778.85,
+        "predict_server": null,
+        "total_client_ms": 33814.02
+      },
+      {
+        "session_client_ms": 859.9,
+        "session_server_encode_ms": null,
+        "predict_client_ms": 32548.86,
+        "predict_server": null,
+        "total_client_ms": 33408.76
+      }
+    ]
+  },
+  "filter": {
+    "client_ms_avg": 26973.22,
+    "setup_search_client_ms": 21149.86,
+    "runs": [
+      {
+        "client_ms": 27783.88,
+        "result_count": 10
+      },
+      {
+        "client_ms": 23635.43,
+        "result_count": 10
+      },
+      {
+        "client_ms": 28901.83,
+        "result_count": 10
+      },
+      {
+        "client_ms": 27734.9,
+        "result_count": 10
+      },
+      {
+        "client_ms": 26810.08,
+        "result_count": 10
+      }
+    ]
+  }
+}

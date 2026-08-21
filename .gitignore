@@ -135,6 +135,7 @@ test_data/
 !frontend/vercel.json
 !backend/railway.json
 !railway.json
+!_bench_assets/*.json
 
 # model weights or large files
 *.pt
