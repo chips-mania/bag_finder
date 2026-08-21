@@ -455,6 +455,8 @@ class BagResult(BaseModel):
 class SearchResponse(BaseModel):
     top5: List[BagResult]
     gallery10: List[BagResult]
+    # preprocess / clip / vector / meta / total (ms)
+    timing_ms: Optional[Dict[str, float]] = None
 
 
 @app.post("/search", response_model=SearchResponse)
@@ -471,6 +473,8 @@ async def search_bags(body: SearchRequest):
         raise HTTPException(status_code=404, detail="Session not found")
     
     try:
+        t0 = time.perf_counter()
+
         # 1. 세션에서 마스크 이미지 로드
         image_path = sess.get("image_path")
         if not image_path or not os.path.exists(image_path):
@@ -481,11 +485,11 @@ async def search_bags(body: SearchRequest):
         if not mask_path or not os.path.exists(mask_path):
             raise HTTPException(status_code=400, detail="No mask found. Please segment the image first.")
         
-        # 2. 원본 이미지 + 마스크 로드
+        # 2–4. 원본+마스크 로드, 크롭, 흰 배경
+        t_pre = time.perf_counter()
         original_img = Image.open(image_path).convert("RGB")
         mask_img = Image.open(mask_path).convert("L")  # grayscale
         
-        # 3. 마스크 영역 바운딩박스 추출 및 크롭
         mask_np = np.array(mask_img)
         coords = np.column_stack(np.where(mask_np > 0))  # (y, x) 좌표
         
@@ -495,26 +499,27 @@ async def search_bags(body: SearchRequest):
         y_min, x_min = coords.min(axis=0)
         y_max, x_max = coords.max(axis=0)
         
-        # 크롭 (바운딩박스)
         cropped = original_img.crop((x_min, y_min, x_max + 1, y_max + 1))
-        
-        # 크롭된 마스크
         cropped_mask = mask_img.crop((x_min, y_min, x_max + 1, y_max + 1))
         cropped_mask_np = np.array(cropped_mask)
         
-        # 4. 마스크 외부를 흰색으로 채우기
         cropped_np = np.array(cropped)
         white_bg = np.ones_like(cropped_np) * 255
         mask_3ch = np.stack([cropped_mask_np] * 3, axis=-1) > 0
         final_np = np.where(mask_3ch, cropped_np, white_bg).astype(np.uint8)
         final_img = Image.fromarray(final_np)
+        preprocess_ms = (time.perf_counter() - t_pre) * 1000.0
         
         # 5. CLIP 임베딩 생성
+        t_clip = time.perf_counter()
         query_embedding = get_image_embedding(final_img)
+        clip_ms = (time.perf_counter() - t_clip) * 1000.0
         sess["clip_embedding"] = query_embedding
         sess["clip_mask_path"] = mask_path
         
         # 6. Supabase 벡터 검색으로 유사도 검색 (전체 데이터 대상)
+        t_vec = time.perf_counter()
+        vector_backend = "rpc"
         try:
             # 벡터 검색 함수 호출
             response = supabase_client.rpc('match_embeddings', {
@@ -535,6 +540,7 @@ async def search_bags(body: SearchRequest):
                 
         except Exception as e:
             logger.warning(f"Vector search failed, falling back to Python calculation: {e}")
+            vector_backend = "python_fallback"
             # 벡터 검색 실패 시 기존 방식으로 폴백
             unique_bags = {}
             limit = 1000
@@ -569,8 +575,10 @@ async def search_bags(body: SearchRequest):
                 
                 if len(unique_bags) >= 50:
                     break
+        vector_ms = (time.perf_counter() - t_vec) * 1000.0
         
         # 7. 유사도 기준 정렬 (내림차순)
+        t_meta = time.perf_counter()
         sorted_bags = sorted(unique_bags.items(), key=lambda x: x[1], reverse=True)
         top_15_bag_ids = [bag_id for bag_id, _ in sorted_bags[:15]]
         
@@ -616,8 +624,31 @@ async def search_bags(body: SearchRequest):
         # 10. top5 / gallery10 분할
         top5 = results[:5]
         gallery10 = results[5:15]
+        meta_ms = (time.perf_counter() - t_meta) * 1000.0
+        total_ms = (time.perf_counter() - t0) * 1000.0
+
+        logger.info(
+            "/search session=%s preprocess=%.1f clip=%.1f vector=%.1f(%s) meta=%.1f total=%.1f",
+            body.session_id,
+            preprocess_ms,
+            clip_ms,
+            vector_ms,
+            vector_backend,
+            meta_ms,
+            total_ms,
+        )
         
-        return SearchResponse(top5=top5, gallery10=gallery10)
+        return SearchResponse(
+            top5=top5,
+            gallery10=gallery10,
+            timing_ms={
+                "preprocess": round(preprocess_ms, 2),
+                "clip": round(clip_ms, 2),
+                "vector": round(vector_ms, 2),
+                "meta": round(meta_ms, 2),
+                "total": round(total_ms, 2),
+            },
+        )
     
     except HTTPException:
         raise

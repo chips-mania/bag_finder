@@ -78,6 +78,13 @@ export interface BagResult {
 export interface SearchResponse {
   top5: BagResult[];
   gallery10: BagResult[];
+  timing_ms?: {
+    preprocess?: number;
+    clip?: number;
+    vector?: number;
+    meta?: number;
+    total?: number;
+  };
 }
 
 export interface FilterSearchRequest {
