@@ -189,17 +189,19 @@ const ImagePreview: React.FC<ImagePreviewProps> = ({ session, imageUrl, onError,
                 />
               );
             })}
-            {points.map(([px, py], i) => (
-              <circle
-                key={`p-${i}`}
-                cx={px}
-                cy={py}
-                r={6}
-                fill={labels[i] === 0 ? '#ff4d4f' : '#1677ff'}
-                stroke="#fff"
-                strokeWidth={2}
-              />
-            ))}
+            {points.map(([px, py], i) =>
+              labels[i] === 0 ? null : (
+                <circle
+                  key={`p-${i}`}
+                  cx={px}
+                  cy={py}
+                  r={6}
+                  fill="#1677ff"
+                  stroke="#fff"
+                  strokeWidth={2}
+                />
+              )
+            )}
           </svg>
         )}
 
