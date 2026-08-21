@@ -1,11 +1,12 @@
 # backend/main.py
 import os
 import io
+import time
 import logging
 import uuid
 from pathlib import Path
 from contextlib import asynccontextmanager
-from typing import Dict, Any, List
+from typing import Dict, Any, List, Optional
 
 from fastapi import FastAPI, File, UploadFile, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
@@ -56,6 +57,7 @@ SESS_DIR.mkdir(exist_ok=True)
 class SessionResponse(BaseModel):
     session_id: str
     image_info: Dict[str, Any]  # {"width": int, "height": int, "format": str}
+    timing_ms: Optional[Dict[str, float]] = None  # {"encode": ...}
 
 class HealthResponse(BaseModel):
     status: str
@@ -66,12 +68,15 @@ class PredictBody(BaseModel):
     session_id: str
     points: List[List[float]] | List[List[List[float]]]  # [[x,y],...] or [[[x,y],...]]
     labels: List[int] | List[List[int]]                  # [1,0,...] or [[1,0,...]]
+    # True(기본): 세션 SAM embedding 재사용 / False: 클릭마다 encode (벤치마크용)
+    reuse_embedding: bool = True
 
 class PredictResponse(BaseModel):
     contours: List[List[List[float]]]  # [[[x,y],...], ...]
     width: int
     height: int
     iou: float | None
+    timing_ms: Optional[Dict[str, float]] = None  # {"encode": ..., "decode": ..., "total": ...}
 
 class FilterSearchRequest(BaseModel):
     selected_categories: List[str] = []
@@ -257,7 +262,9 @@ async def create_session(file: UploadFile = File(...)):
         img_path = SESS_DIR / f"{session_id}.png"
         img.save(img_path)
 
+        t_encode = time.perf_counter()
         embedding = mobile_sam_model.encode_image(img)
+        encode_ms = (time.perf_counter() - t_encode) * 1000.0
 
         # 동일 session_id로 저장(※ predict에서 찾기 위해)
         session_cache.create_session({
@@ -270,11 +277,16 @@ async def create_session(file: UploadFile = File(...)):
         if sess is not None:
             sess["sam_embedding"] = embedding
 
-        logger.info("Session created successfully: %s", session_id)
+        logger.info(
+            "Session created successfully: %s (sam_encode_ms=%.1f)",
+            session_id,
+            encode_ms,
+        )
 
         return SessionResponse(
             session_id=session_id,
             image_info={"width": info["width"], "height": info["height"], "format": info["format"]},
+            timing_ms={"encode": round(encode_ms, 2)},
         )
 
     except HTTPException:
@@ -326,18 +338,32 @@ async def predict_mask(body: PredictBody):
         raise HTTPException(status_code=500, detail=f"Failed to open image: {e}")
 
     try:
-        embedding = sess.get("sam_embedding")
-        if embedding is None or embedding.get("transform_matrix") is None:
+        encode_ms = 0.0
+        t0 = time.perf_counter()
+        if body.reuse_embedding:
+            embedding = sess.get("sam_embedding")
+            if embedding is None or embedding.get("transform_matrix") is None:
+                t_enc = time.perf_counter()
+                embedding = mobile_sam_model.encode_image(img)
+                encode_ms = (time.perf_counter() - t_enc) * 1000.0
+                sess["sam_embedding"] = embedding
+        else:
+            # 벤치마크 Before: 클릭마다 SAM encode
+            t_enc = time.perf_counter()
             embedding = mobile_sam_model.encode_image(img)
-            sess["sam_embedding"] = embedding
+            encode_ms = (time.perf_counter() - t_enc) * 1000.0
+
         logger.info(
-            "/predict session=%s img=%sx%s points=%s labels=%s",
+            "/predict session=%s img=%sx%s points=%s labels=%s reuse=%s encode_ms=%.1f",
             body.session_id,
             img.width,
             img.height,
             body.points,
             body.labels,
+            body.reuse_embedding,
+            encode_ms,
         )
+        t_dec = time.perf_counter()
         mask_bin, iou = mobile_sam_model.predict_mask(
             image=img,
             points=body.points,
@@ -345,6 +371,8 @@ async def predict_mask(body: PredictBody):
             multimask_output=False,
             embedding=embedding,
         )
+        decode_ms = (time.perf_counter() - t_dec) * 1000.0
+        total_ms = (time.perf_counter() - t0) * 1000.0
 
         # ✅ AnyLabeling 스타일 컨투어 추출 & 단순화
         contours = extract_contours(
@@ -379,6 +407,11 @@ async def predict_mask(body: PredictBody):
             width=width,
             height=height,
             iou=float(iou) if iou is not None else None,
+            timing_ms={
+                "encode": round(encode_ms, 2),
+                "decode": round(decode_ms, 2),
+                "total": round(total_ms, 2),
+            },
         )
 
     except HTTPException:
